@@ -38,6 +38,7 @@ public:
     synthesis.twiddles.resize(dftsize);
 
     analysis.cursor = 0;
+    analysis.maxcursor = dftsize * 2 - 1;
     analysis.input.resize(dftsize * 2);
     analysis.accoutput.resize(dftsize);
     analysis.auxoutput.resize(dftsize + 2);
@@ -99,7 +100,7 @@ public:
 
     dft[0] = dft[dftsize - 1] = 0;
 
-    if (++analysis.cursor >= analysis.input.size())
+    if (++analysis.cursor > analysis.maxcursor)
     {
       analysis.cursor = 0;
     }
@@ -160,6 +161,7 @@ private:
     std::vector<std::complex<F>> twiddles;
 
     size_t cursor;
+    size_t maxcursor;
     std::vector<T> input;
     std::vector<std::complex<F>> accoutput;
     std::vector<std::complex<F>> auxoutput;

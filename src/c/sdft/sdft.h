@@ -50,6 +50,7 @@ struct sdft_plan_analysis
   SDFT_FDX_TYPE* twiddles;
 
   size_t cursor;
+  size_t maxcursor;
   SDFT_TD_TYPE* input;
   SDFT_FDX_TYPE* accoutput;
   SDFT_FDX_TYPE* auxoutput;
@@ -151,6 +152,7 @@ SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
   assert(sdft->synthesis.twiddles != NULL);
 
   sdft->analysis.cursor = 0;
+  sdft->analysis.maxcursor = dftsize * 2 - 1;
   sdft->analysis.input = calloc(dftsize * 2, sizeof(SDFT_TD_TYPE));
   sdft->analysis.accoutput = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
   sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(SDFT_FDX_TYPE));
@@ -273,7 +275,7 @@ void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
 
   dft[0] = dft[sdft->dftsize - 1] = 0;
 
-  if (++sdft->analysis.cursor >= (sdft->dftsize * 2))
+  if (++sdft->analysis.cursor > sdft->analysis.maxcursor)
   {
     sdft->analysis.cursor = 0;
   }
