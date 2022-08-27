@@ -6,9 +6,31 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define SDFT_TD_TYPE float
-#define SDFT_FD_TYPE double
-#define SDFT_FDX_TYPE SDFT_FD_TYPE complex
+#if defined(SDFT_TD_FLOAT)
+  typedef float SDFT_TD_TYPE;
+#elif defined(SDFT_TD_DOUBLE)
+  typedef double SDFT_TD_TYPE;
+#elif defined(SDFT_TD_LONG_DOUBLE)
+  typedef long double SDFT_TD_TYPE;
+#else
+  #define SDFT_TD_FLOAT
+  typedef float SDFT_TD_TYPE;
+#endif
+
+#if defined(SDFT_FD_FLOAT)
+  typedef float SDFT_FD_TYPE;
+  typedef float complex SDFT_FDX_TYPE;
+#elif defined(SDFT_FD_DOUBLE)
+  typedef double SDFT_FD_TYPE;
+  typedef double complex SDFT_FDX_TYPE;
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  typedef long double SDFT_FD_TYPE;
+  typedef long double complex SDFT_FDX_TYPE;
+#else
+  #define SDFT_FD_DOUBLE
+  typedef double SDFT_FD_TYPE;
+  typedef double complex SDFT_FDX_TYPE;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,44 +77,44 @@ struct sdft_plan
 
 typedef struct sdft_plan SDFT;
 
-#if (SDFT_FD_TYPE == float)
-SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosf(a); }
-#elif (SDFT_FD_TYPE == double)
-SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acos(a); }
-// #elif (SDFT_FD_TYPE == (long double))
-// SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosl(a); }
+#if defined(SDFT_FD_FLOAT)
+  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosf(a); }
+#elif defined(SDFT_FD_DOUBLE)
+  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acos(a); }
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosl(a); }
 #endif
 
-#if (SDFT_FD_TYPE == float)
-SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosf(a); }
-#elif (SDFT_FD_TYPE == double)
-SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cos(a); }
-// #elif (SDFT_FD_TYPE == (long double))
-// SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosl(a); }
+#if defined(SDFT_FD_FLOAT)
+  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosf(a); }
+#elif defined(SDFT_FD_DOUBLE)
+  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cos(a); }
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosl(a); }
 #endif
 
-#if (SDFT_FD_TYPE == float)
-SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpf(I * a); }
-#elif (SDFT_FD_TYPE == double)
-SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexp(I * a); }
-// #elif (SDFT_FD_TYPE == (long double))
-// SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpl(I * a); }
+#if defined(SDFT_FD_FLOAT)
+  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return crealf(z); }
+#elif defined(SDFT_FD_DOUBLE)
+  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creal(z); }
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creall(z); }
 #endif
 
-#if (SDFT_FD_TYPE == float)
-SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return crealf(z); }
-#elif (SDFT_FD_TYPE == double)
-SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creal(z); }
-// #elif (SDFT_FD_TYPE == (long double))
-// SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creall(z); }
+#if defined(SDFT_FD_FLOAT)
+  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpf(I * a); }
+#elif defined(SDFT_FD_DOUBLE)
+  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexp(I * a); }
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpl(I * a); }
 #endif
 
-#if (SDFT_FD_TYPE == float)
-SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjf(z); }
-#elif (SDFT_FD_TYPE == double)
-SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conj(z); }
-// #elif (SDFT_FD_TYPE == (long double))
-// SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjl(z); }
+#if defined(SDFT_FD_FLOAT)
+  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjf(z); }
+#elif defined(SDFT_FD_DOUBLE)
+  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conj(z); }
+#elif defined(SDFT_FD_LONG_DOUBLE)
+  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjl(z); }
 #endif
 
 SDFT_TD_TYPE sdft_exchange(SDFT_TD_TYPE* old_value, const SDFT_TD_TYPE new_value)
