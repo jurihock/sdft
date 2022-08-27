@@ -39,7 +39,7 @@ def main():
         dfts = sdft.sdft(samples)
         y[hop] = dfts[0]
 
-    spectrogram(y, sr, hopsize).show()
+    spectrogram(y, sr, hopsize, ylim=(500, 15e3), ylog=True).show()
 
 
 if __name__ == '__main__':

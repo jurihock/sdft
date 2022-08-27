@@ -2,7 +2,7 @@ import matplotlib.pyplot as plotpy
 import numpy
 
 
-def spectrogram(dfts, sr, hopsize=1, xlim=None, ylim=None, clim=-120, cmap='inferno'):
+def spectrogram(dfts, sr, hopsize=1, xlim=None, ylim=None, clim=-120, cmap='inferno', ylog=False):
 
     def lim():
 
@@ -38,6 +38,9 @@ def spectrogram(dfts, sr, hopsize=1, xlim=None, ylim=None, clim=-120, cmap='infe
     plotpy.xlabel('s')
     plotpy.ylabel('Hz')
     colorbar.set_label('dB')
+
+    if ylog:
+        plotpy.yscale('log')
 
     lim()
 
