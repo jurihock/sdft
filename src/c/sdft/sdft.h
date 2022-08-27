@@ -55,6 +55,46 @@ struct sdft_plan
 
 typedef struct sdft_plan SDFT;
 
+#if (SDFT_FD_TYPE == float)
+SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosf(a); }
+#elif (SDFT_FD_TYPE == double)
+SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acos(a); }
+// #elif (SDFT_FD_TYPE == (long double))
+// SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosl(a); }
+#endif
+
+#if (SDFT_FD_TYPE == float)
+SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosf(a); }
+#elif (SDFT_FD_TYPE == double)
+SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cos(a); }
+// #elif (SDFT_FD_TYPE == (long double))
+// SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosl(a); }
+#endif
+
+#if (SDFT_FD_TYPE == float)
+SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpf(I * a); }
+#elif (SDFT_FD_TYPE == double)
+SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexp(I * a); }
+// #elif (SDFT_FD_TYPE == (long double))
+// SDFT_FD_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpl(I * a); }
+#endif
+
+#if (SDFT_FD_TYPE == float)
+SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return crealf(z); }
+#elif (SDFT_FD_TYPE == double)
+SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creal(z); }
+// #elif (SDFT_FD_TYPE == (long double))
+// SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creall(z); }
+#endif
+
+#if (SDFT_FD_TYPE == float)
+SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjf(z); }
+#elif (SDFT_FD_TYPE == double)
+SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conj(z); }
+// #elif (SDFT_FD_TYPE == (long double))
+// SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjl(z); }
+#endif
+
 SDFT_TD_TYPE sdft_exchange(SDFT_TD_TYPE* old_value, const SDFT_TD_TYPE new_value)
 {
   SDFT_TD_TYPE value = *old_value;
@@ -76,6 +116,9 @@ SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
 
   assert(sdft != NULL);
 
+  sdft->dftsize = dftsize;
+  sdft->latency = latency;
+
   sdft->analysis.roi = (SDFT_ROI){ 0, dftsize };
   sdft->synthesis.roi = (SDFT_ROI){ 0, dftsize };
 
@@ -96,15 +139,15 @@ SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
   assert(sdft->analysis.auxoutput != NULL);
   assert(sdft->analysis.fiddles != NULL);
 
-  const SDFT_FD_TYPE pi = (SDFT_FD_TYPE)(-2) * acos((SDFT_FD_TYPE)(-1)) / (dftsize * 2);
-  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(2) / ((SDFT_FD_TYPE)(1) - cos(pi * dftsize * latency));
+  const SDFT_FD_TYPE pi = (SDFT_FD_TYPE)(-2) * sdft_acos((SDFT_FD_TYPE)(-1)) / (dftsize * 2);
+  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(2) / ((SDFT_FD_TYPE)(1) - sdft_cos(pi * dftsize * latency));
 
   for (size_t i = 0; i < dftsize; ++i)
   {
-    sdft->analysis.twiddles[i] = (SDFT_FD_TYPE)(1) * cexp(I * pi * i);
-    sdft->synthesis.twiddles[i] = weight * cexp(I * pi * i * dftsize * latency);
+    sdft->analysis.twiddles[i] = sdft_polar((SDFT_FD_TYPE)(1), pi * i);
+    sdft->synthesis.twiddles[i] = sdft_polar(weight, pi * i * dftsize * latency);
 
-    sdft->analysis.fiddles[i] = (SDFT_FD_TYPE)(1) * I;
+    sdft->analysis.fiddles[i] = (SDFT_FD_TYPE)(1);
   }
 
   return sdft;
@@ -186,7 +229,7 @@ void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
     sdft->analysis.fiddles[i] = newfiddle;
 
     sdft->analysis.accoutput[i] += delta * oldfiddle;
-    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * conj(newfiddle);
+    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * sdft_conj(newfiddle);
   }
 
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
@@ -224,14 +267,14 @@ SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
   {
     for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += creal(dft[i]) * (i % 2 ? -1 : +1);
+      sample += sdft_real(dft[i]) * (i % 2 ? -1 : +1);
     }
   }
   else
   {
     for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += creal(dft[i] * sdft->synthesis.twiddles[i]);
+      sample += sdft_real(dft[i] * sdft->synthesis.twiddles[i]);
     }
   }
 
