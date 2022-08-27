@@ -15,8 +15,8 @@ from plot import spectrogram
 
 def main():
 
-    dftsize = 1024
-    hopsize = 2000
+    dftsize = 512
+    hopsize = 100
     file = 'test.wav'
 
     sdft = SDFT(dftsize)
@@ -35,6 +35,7 @@ def main():
     for hop, samples in enumerate(hops):
 
         print(f'{hop+1}/{len(hops)}')
+
         dfts = sdft.sdft(samples)
         y[hop] = dfts[0]
 

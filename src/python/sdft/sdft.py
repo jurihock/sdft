@@ -8,6 +8,10 @@ class SDFT:
         self.dftsize = dftsize
         self.latency = latency
 
+        self.offset = 0
+        self.delayline = numpy.zeros(dftsize * 2, float)
+        self.accumulator = numpy.zeros(dftsize, complex)
+
     def sdft(self, samples):
 
         samples = numpy.atleast_1d(samples)
@@ -17,21 +21,24 @@ class SDFT:
         M = samples.size
         N = self.dftsize
 
-        m = numpy.arange(M + 1)[:, None]
+        m = numpy.arange(self.offset, self.offset + M + 1)[:, None]
         n = numpy.arange(N)
+
+        self.offset += M
 
         twiddles = numpy.exp(-2j * numpy.pi * m * n / (N * 2))
 
-        delayline = numpy.resize(numpy.pad(samples, (N * 2, 0)), samples.shape)
-
-        deltas = samples - delayline
+        delayline = numpy.concatenate((self.delayline, samples))
+        deltas = samples - delayline[:M]
+        numpy.copyto(self.delayline, delayline[-(N * 2):])
 
         data = deltas[:, None] * twiddles[:-1]
 
+        data[0] += self.accumulator
         numpy.add.accumulate(data, axis=0, out=data)
+        numpy.copyto(self.accumulator, data[-1])
 
         data *= numpy.conj(twiddles[1:])
-
         dfts = self.window(data)
 
         return dfts
@@ -55,6 +62,10 @@ class SDFT:
         return samples
 
     def window(self, x):
+
+        x = numpy.atleast_2d(x)
+
+        assert x.ndim == 2, f'Expected 2D array (samples,frequencies), got {x.shape}!'
 
         M, N = x.shape
 

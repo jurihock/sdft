@@ -51,6 +51,7 @@ struct sdft_plan_analysis
   size_t cursor;
   size_t maxcursor;
   SDFT_TD_TYPE* input;
+
   SDFT_FDX_TYPE* accoutput;
   SDFT_FDX_TYPE* auxoutput;
   SDFT_FDX_TYPE* fiddles;
@@ -168,6 +169,7 @@ SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
   sdft->analysis.input = calloc(dftsize * 2, sizeof(SDFT_TD_TYPE));
+
   sdft->analysis.accoutput = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
   sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(SDFT_FDX_TYPE));
   sdft->analysis.fiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));

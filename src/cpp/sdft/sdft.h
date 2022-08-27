@@ -40,6 +40,7 @@ public:
     analysis.cursor = 0;
     analysis.maxcursor = dftsize * 2 - 1;
     analysis.input.resize(dftsize * 2);
+
     analysis.accoutput.resize(dftsize);
     analysis.auxoutput.resize(dftsize + 2);
     analysis.fiddles.resize(dftsize, 1);
@@ -163,6 +164,7 @@ private:
     size_t cursor;
     size_t maxcursor;
     std::vector<T> input;
+
     std::vector<std::complex<F>> accoutput;
     std::vector<std::complex<F>> auxoutput;
     std::vector<std::complex<F>> fiddles;
