@@ -5,7 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -77,45 +77,60 @@ struct sdft_plan
 
 typedef struct sdft_plan SDFT;
 
-#if defined(SDFT_FD_FLOAT)
-  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosf(a); }
-#elif defined(SDFT_FD_DOUBLE)
-  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acos(a); }
-#elif defined(SDFT_FD_LONG_DOUBLE)
-  SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a) { return acosl(a); }
-#endif
+SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a)
+{
+  #if defined(SDFT_FD_FLOAT)
+    return acosf(a);
+  #elif defined(SDFT_FD_DOUBLE)
+    return acos(a);
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return acosl(a);
+  #endif
+}
 
-#if defined(SDFT_FD_FLOAT)
-  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosf(a); }
-#elif defined(SDFT_FD_DOUBLE)
-  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cos(a); }
-#elif defined(SDFT_FD_LONG_DOUBLE)
-  SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a) { return cosl(a); }
-#endif
+SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a)
+{
+  #if defined(SDFT_FD_FLOAT)
+    return cosf(a);
+  #elif defined(SDFT_FD_DOUBLE)
+    return cos(a);
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return cosl(a);
+  #endif
+}
 
-#if defined(SDFT_FD_FLOAT)
-  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return crealf(z); }
-#elif defined(SDFT_FD_DOUBLE)
-  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creal(z); }
-#elif defined(SDFT_FD_LONG_DOUBLE)
-  SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z) { return creall(z); }
-#endif
+SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z)
+{
+  #if defined(SDFT_FD_FLOAT)
+    return crealf(z);
+  #elif defined(SDFT_FD_DOUBLE)
+    return creal(z);
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return creall(z);
+  #endif
+}
 
-#if defined(SDFT_FD_FLOAT)
-  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpf(I * a); }
-#elif defined(SDFT_FD_DOUBLE)
-  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexp(I * a); }
-#elif defined(SDFT_FD_LONG_DOUBLE)
-  SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a) { return r * cexpl(I * a); }
-#endif
+SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a)
+{
+  #if defined(SDFT_FD_FLOAT)
+    return r * cexpf(I * a);
+  #elif defined(SDFT_FD_DOUBLE)
+    return r * cexp(I * a);
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return r * cexpl(I * a);
+  #endif
+}
 
-#if defined(SDFT_FD_FLOAT)
-  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjf(z); }
-#elif defined(SDFT_FD_DOUBLE)
-  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conj(z); }
-#elif defined(SDFT_FD_LONG_DOUBLE)
-  SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z) { return conjl(z); }
-#endif
+SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z)
+{
+  #if defined(SDFT_FD_FLOAT)
+    return conjf(z);
+  #elif defined(SDFT_FD_DOUBLE)
+    return conj(z);
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return conjl(z);
+  #endif
+}
 
 SDFT_TD_TYPE sdft_exchange(SDFT_TD_TYPE* old_value, const SDFT_TD_TYPE new_value)
 {
@@ -304,6 +319,6 @@ SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
   return (SDFT_TD_TYPE)(sample);
 }
 
-#ifdef __cplusplus
+#if defined(__cplusplus)
 }
 #endif
