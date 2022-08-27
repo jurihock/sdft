@@ -12,4 +12,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/src/c/sdft/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/src/cpp/sdft/CMakeLists.txt")
 
 include("${CMAKE_CURRENT_LIST_DIR}/lib/cpm.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/lib/dr_libs.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/test/CMakeLists.txt")
