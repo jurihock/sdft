@@ -1,5 +1,4 @@
-#ifndef SDFT_H
-#define SDFT_H
+#pragma once
 
 #include <assert.h>
 #include <complex.h>
@@ -307,6 +306,4 @@ SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
