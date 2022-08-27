@@ -6,6 +6,10 @@
 #include <math.h>
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(SDFT_TD_FLOAT)
   typedef float SDFT_TD_TYPE;
 #elif defined(SDFT_TD_DOUBLE)
@@ -30,10 +34,6 @@
   #define SDFT_FD_DOUBLE
   typedef double SDFT_FD_TYPE;
   typedef double complex SDFT_FDX_TYPE;
-#endif
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 struct sdft_plan_roi
