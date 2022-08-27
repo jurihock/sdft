@@ -1,0 +1,245 @@
+#ifndef SDFT_H
+#define SDFT_H
+
+#include <assert.h>
+#include <complex.h>
+#include <math.h>
+#include <stdlib.h>
+
+#define SDFT_TD_TYPE float
+#define SDFT_FD_TYPE double
+#define SDFT_FDX_TYPE SDFT_FD_TYPE complex
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct sdft_plan_roi
+{
+  size_t first;
+  size_t second;
+};
+
+typedef struct sdft_plan_roi SDFT_ROI;
+
+struct sdft_plan_analysis
+{
+  SDFT_ROI roi;
+  SDFT_FDX_TYPE* twiddles;
+
+  size_t cursor;
+  SDFT_TD_TYPE* input;
+  SDFT_FDX_TYPE* accoutput;
+  SDFT_FDX_TYPE* auxoutput;
+  SDFT_FDX_TYPE* fiddles;
+};
+
+typedef struct sdft_plan_analysis SDFT_ANALYSIS;
+
+struct sdft_plan_synthesis
+{
+  SDFT_ROI roi;
+  SDFT_FDX_TYPE* twiddles;
+};
+
+typedef struct sdft_plan_synthesis SDFT_SYNTHESIS;
+
+struct sdft_plan
+{
+  size_t dftsize;
+  double latency;
+
+  SDFT_ANALYSIS analysis;
+  SDFT_SYNTHESIS synthesis;
+};
+
+typedef struct sdft_plan SDFT;
+
+SDFT_TD_TYPE sdft_exchange(SDFT_TD_TYPE* old_value, const SDFT_TD_TYPE new_value)
+{
+  SDFT_TD_TYPE value = *old_value;
+  *old_value = new_value;
+  return value;
+}
+
+SDFT_FDX_TYPE sdft_window(const SDFT_FDX_TYPE left,
+                          const SDFT_FDX_TYPE middle,
+                          const SDFT_FDX_TYPE right,
+                          const SDFT_FD_TYPE  weight)
+{
+  return (SDFT_FD_TYPE)(0.25) * ((middle + middle) - (left + right)) * weight;
+}
+
+SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
+{
+  SDFT* sdft = malloc(sizeof(SDFT));
+
+  assert(sdft != NULL);
+
+  sdft->analysis.roi = (SDFT_ROI){ 0, dftsize };
+  sdft->synthesis.roi = (SDFT_ROI){ 0, dftsize };
+
+  sdft->analysis.twiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+  sdft->synthesis.twiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+
+  assert(sdft->analysis.twiddles != NULL);
+  assert(sdft->synthesis.twiddles != NULL);
+
+  sdft->analysis.cursor = 0;
+  sdft->analysis.input = calloc(dftsize * 2, sizeof(SDFT_TD_TYPE));
+  sdft->analysis.accoutput = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+  sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(SDFT_FDX_TYPE));
+  sdft->analysis.fiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+
+  assert(sdft->analysis.input != NULL);
+  assert(sdft->analysis.accoutput != NULL);
+  assert(sdft->analysis.auxoutput != NULL);
+  assert(sdft->analysis.fiddles != NULL);
+
+  const SDFT_FD_TYPE pi = (SDFT_FD_TYPE)(-2) * acos((SDFT_FD_TYPE)(-1)) / (dftsize * 2);
+  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(2) / ((SDFT_FD_TYPE)(1) - cos(pi * dftsize * latency));
+
+  for (size_t i = 0; i < dftsize; ++i)
+  {
+    sdft->analysis.twiddles[i] = (SDFT_FD_TYPE)(1) * cexp(I * pi * i);
+    sdft->synthesis.twiddles[i] = weight * cexp(I * pi * i * dftsize * latency);
+
+    sdft->analysis.fiddles[i] = (SDFT_FD_TYPE)(1) * I;
+  }
+
+  return sdft;
+}
+
+SDFT* sdft_alloc(const size_t dftsize)
+{
+  return sdft_alloc_custom(dftsize, 1);
+}
+
+void sdft_free(SDFT* sdft)
+{
+  if (sdft == NULL)
+  {
+    return;
+  }
+
+  if (sdft->analysis.twiddles != NULL)
+  {
+    free(sdft->analysis.twiddles);
+    sdft->analysis.twiddles = NULL;
+  }
+
+  if (sdft->synthesis.twiddles != NULL)
+  {
+    free(sdft->synthesis.twiddles);
+    sdft->synthesis.twiddles = NULL;
+  }
+
+  if (sdft->analysis.input != NULL)
+  {
+    free(sdft->analysis.input);
+    sdft->analysis.input = NULL;
+  }
+
+  if (sdft->analysis.accoutput != NULL)
+  {
+    free(sdft->analysis.accoutput);
+    sdft->analysis.accoutput = NULL;
+  }
+
+  if (sdft->analysis.auxoutput != NULL)
+  {
+    free(sdft->analysis.auxoutput);
+    sdft->analysis.auxoutput = NULL;
+  }
+
+  if (sdft->analysis.fiddles != NULL)
+  {
+    free(sdft->analysis.fiddles);
+    sdft->analysis.fiddles = NULL;
+  }
+
+  free(sdft);
+  sdft = NULL;
+}
+
+size_t sdft_size(const SDFT* sdft)
+{
+  return (sdft != NULL) ? sdft->dftsize : 0;
+}
+
+void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
+{
+  // assert(dft.size() == sdft->dftsize);
+
+  // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
+  // but then requires a correction by factor 2 in synthesis and is therefore omitted
+
+  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(1) / sdft->dftsize;
+
+  const SDFT_FD_TYPE delta = sample - sdft_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
+
+  for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  {
+    const SDFT_FDX_TYPE oldfiddle = sdft->analysis.fiddles[i];
+    const SDFT_FDX_TYPE newfiddle = oldfiddle * sdft->analysis.twiddles[i];
+
+    sdft->analysis.fiddles[i] = newfiddle;
+
+    sdft->analysis.accoutput[i] += delta * oldfiddle;
+    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * conj(newfiddle);
+  }
+
+  // theoretically the DFT periodicity needs to be preserved for proper windowing,
+  // but the both outer bins seem to be noisy for an unclear reason
+  // and will be suppressed anyway after windowing
+
+  // analysis.auxoutput[0] = analysis.auxoutput[sdft->dftsize];
+  // analysis.auxoutput[sdft->dftsize + 1] = analysis.auxoutput[1];
+
+  for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  {
+    dft[i] = sdft_window(sdft->analysis.auxoutput[j - 1],
+                         sdft->analysis.auxoutput[j],
+                         sdft->analysis.auxoutput[j + 1],
+                         weight);
+  }
+
+  // finally suppress outer DFT bins as announced in the comment above
+
+  dft[0] = dft[sdft->dftsize - 1] = 0;
+
+  if (++sdft->analysis.cursor >= (sdft->dftsize * 2))
+  {
+    sdft->analysis.cursor = 0;
+  }
+}
+
+SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
+{
+  // assert(dft.size() == dftsize);
+
+  SDFT_FD_TYPE sample = (SDFT_FD_TYPE)(0);
+
+  if (sdft->latency == 1)
+  {
+    for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    {
+      sample += creal(dft[i]) * (i % 2 ? -1 : +1);
+    }
+  }
+  else
+  {
+    for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    {
+      sample += creal(dft[i] * sdft->synthesis.twiddles[i]);
+    }
+  }
+
+  return (SDFT_TD_TYPE)(sample);
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
