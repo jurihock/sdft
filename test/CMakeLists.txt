@@ -16,6 +16,14 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PRIVATE sdft::c dr_libs)
 
+if (MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE /fp:fast)
+else()
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE -ffast-math)
+endif()
+
 # C++
 
 project(sdft-test-cpp)
@@ -30,3 +38,11 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE sdft::cpp dr_libs)
+
+if (MSVC)
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE /fp:fast)
+else()
+  target_compile_options(${PROJECT_NAME}
+    PRIVATE -ffast-math)
+endif()
