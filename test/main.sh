@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DFTSIZE=512
+DFTSIZE=500
 HOPSIZE=1000
 
 BUILD=../build-release
