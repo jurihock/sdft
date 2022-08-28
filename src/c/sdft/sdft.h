@@ -78,7 +78,7 @@ struct sdft_plan
 
 typedef struct sdft_plan sdft_t;
 
-sdft_fd_t sdft_acos(const sdft_fd_t a)
+sdft_fd_t sdft_etc_acos(const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return acosf(a);
@@ -89,7 +89,7 @@ sdft_fd_t sdft_acos(const sdft_fd_t a)
   #endif
 }
 
-sdft_fd_t sdft_cos(const sdft_fd_t a)
+sdft_fd_t sdft_etc_cos(const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return cosf(a);
@@ -100,7 +100,7 @@ sdft_fd_t sdft_cos(const sdft_fd_t a)
   #endif
 }
 
-sdft_fd_t sdft_real(const sdft_fdx_t z)
+sdft_fd_t sdft_etc_real(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
     return crealf(z);
@@ -111,7 +111,7 @@ sdft_fd_t sdft_real(const sdft_fdx_t z)
   #endif
 }
 
-sdft_fdx_t sdft_polar(const sdft_fd_t r, const sdft_fd_t a)
+sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return r * cexpf(I * a);
@@ -122,7 +122,7 @@ sdft_fdx_t sdft_polar(const sdft_fd_t r, const sdft_fd_t a)
   #endif
 }
 
-sdft_fdx_t sdft_conj(const sdft_fdx_t z)
+sdft_fdx_t sdft_etc_conj(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
     return conjf(z);
@@ -133,14 +133,14 @@ sdft_fdx_t sdft_conj(const sdft_fdx_t z)
   #endif
 }
 
-sdft_td_t sdft_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
+sdft_td_t sdft_etc_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
 {
   sdft_td_t value = *old_value;
   *old_value = new_value;
   return value;
 }
 
-sdft_fdx_t sdft_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t  weight)
+sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t  weight)
 {
   return (sdft_fd_t)(0.25) * ((middle + middle) - (left + right)) * weight;
 }
@@ -176,13 +176,13 @@ sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
   assert(sdft->analysis.auxoutput != NULL);
   assert(sdft->analysis.fiddles != NULL);
 
-  const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_acos((sdft_fd_t)(-1)) / (dftsize * 2);
-  const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_cos(pi * dftsize * latency));
+  const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
+  const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
 
   for (size_t i = 0; i < dftsize; ++i)
   {
-    sdft->analysis.twiddles[i] = sdft_polar((sdft_fd_t)(1), pi * i);
-    sdft->synthesis.twiddles[i] = sdft_polar(weight, pi * i * dftsize * latency);
+    sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), pi * i);
+    sdft->synthesis.twiddles[i] = sdft_etc_polar(weight, pi * i * dftsize * latency);
 
     sdft->analysis.fiddles[i] = (sdft_fd_t)(1);
   }
@@ -256,7 +256,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
   const sdft_fd_t weight = (sdft_fd_t)(1) / sdft->dftsize;
 
-  const sdft_fd_t delta = sample - sdft_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
+  const sdft_fd_t delta = sample - sdft_etc_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
 
   for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
@@ -266,7 +266,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     sdft->analysis.fiddles[i] = newfiddle;
 
     sdft->analysis.accoutput[i] += delta * oldfiddle;
-    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * sdft_conj(newfiddle);
+    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * sdft_etc_conj(newfiddle);
   }
 
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
@@ -278,10 +278,10 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
   for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
-    dft[i] = sdft_window(sdft->analysis.auxoutput[j - 1],
-                         sdft->analysis.auxoutput[j],
-                         sdft->analysis.auxoutput[j + 1],
-                         weight);
+    dft[i] = sdft_etc_window(sdft->analysis.auxoutput[j - 1],
+                             sdft->analysis.auxoutput[j],
+                             sdft->analysis.auxoutput[j + 1],
+                             weight);
   }
 
   // finally suppress outer DFT bins as announced in the comment above
@@ -320,14 +320,14 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
   {
     for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += sdft_real(dft[i]) * (i % 2 ? -1 : +1);
+      sample += sdft_etc_real(dft[i]) * (i % 2 ? -1 : +1);
     }
   }
   else
   {
     for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += sdft_real(dft[i] * sdft->synthesis.twiddles[i]);
+      sample += sdft_etc_real(dft[i] * sdft->synthesis.twiddles[i]);
     }
   }
 
