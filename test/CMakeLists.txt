@@ -10,8 +10,11 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
   PRIVATE ${HDR} "${CMAKE_CURRENT_LIST_DIR}/test.c")
 
+target_include_directories(${PROJECT_NAME}
+  PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
+
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE sdft::c)
+  PRIVATE sdft::c dr_libs)
 
 # C++
 
@@ -22,5 +25,8 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
   PRIVATE ${HDR} "${CMAKE_CURRENT_LIST_DIR}/test.cpp")
 
+target_include_directories(${PROJECT_NAME}
+  PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
+
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE sdft::cpp)
+  PRIVATE sdft::cpp dr_libs)

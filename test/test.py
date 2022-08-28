@@ -16,18 +16,17 @@ from plot import spectrogram
 def main():
 
     dftsize = 512
-    hopsize = 100
+    hopsize = 1000
     file = 'test.wav'
 
     sdft = SDFT(dftsize)
 
     x, sr = read(file)
+    size = (x.size // hopsize) * hopsize
 
-    oldsize = x.size
-    newsize = (x.size // hopsize) * hopsize
+    x = x[:size]
+    hops = np.split(x, size // hopsize)
 
-    x = x[:newsize]
-    hops = np.split(x, newsize // hopsize)
     y = np.ndarray((len(hops), dftsize), complex)
 
     for hop, samples in enumerate(hops):
