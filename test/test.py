@@ -2,14 +2,11 @@ import numpy as np
 import os
 import sys
 
-
 sys.path.insert(0, os.path.join(
     os.path.dirname(__file__), '..', 'src', 'python'))
 
-
 from sdft import SDFT
 from wav import readwav
-from plot import spectrogram
 
 
 def main():

@@ -1,5 +1,20 @@
 import matplotlib.pyplot as plotpy
 import numpy
+import sys
+
+
+def figure(name=None):
+
+    plotpy.figure(name)
+
+    return sys.modules[__name__]
+
+
+def show():
+
+    plotpy.show()
+
+    return sys.modules[__name__]
 
 
 def spectrogram(dfts, sr, hopsize=1, xlim=None, ylim=None, clim=-120, cmap='inferno', yscale='linear'):
@@ -43,4 +58,4 @@ def spectrogram(dfts, sr, hopsize=1, xlim=None, ylim=None, clim=-120, cmap='infe
 
     lim()
 
-    return plotpy
+    return sys.modules[__name__]
