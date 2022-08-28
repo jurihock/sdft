@@ -205,10 +205,7 @@ private:
     return value;
   }
 
-  inline static std::complex<F> window(const std::complex<F>& left,
-                                       const std::complex<F>& middle,
-                                       const std::complex<F>& right,
-                                       const F weight)
+  inline static std::complex<F> window(const std::complex<F>& left, const std::complex<F>& middle, const std::complex<F>& right, const F weight)
   {
     return F(0.25) * ((middle + middle) - (left + right)) * weight;
   }

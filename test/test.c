@@ -11,7 +11,7 @@ int main()
   const size_t hopsize = 1000;
   const char* file = "test.wav";
 
-  SDFT* sdft = sdft_alloc(dftsize);
+  sdft_t* sdft = sdft_alloc(dftsize);
 
   float* data;
   size_t size;

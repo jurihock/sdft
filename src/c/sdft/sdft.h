@@ -10,29 +10,29 @@ extern "C" {
 #endif
 
 #if defined(SDFT_TD_FLOAT)
-  typedef float SDFT_TD_TYPE;
+  typedef float sdft_td_t;
 #elif defined(SDFT_TD_DOUBLE)
-  typedef double SDFT_TD_TYPE;
+  typedef double sdft_td_t;
 #elif defined(SDFT_TD_LONG_DOUBLE)
-  typedef long double SDFT_TD_TYPE;
+  typedef long double sdft_td_t;
 #else
   #define SDFT_TD_FLOAT
-  typedef float SDFT_TD_TYPE;
+  typedef float sdft_td_t;
 #endif
 
 #if defined(SDFT_FD_FLOAT)
-  typedef float SDFT_FD_TYPE;
-  typedef float complex SDFT_FDX_TYPE;
+  typedef float sdft_fd_t;
+  typedef float complex sdft_fdx_t;
 #elif defined(SDFT_FD_DOUBLE)
-  typedef double SDFT_FD_TYPE;
-  typedef double complex SDFT_FDX_TYPE;
+  typedef double sdft_fd_t;
+  typedef double complex sdft_fdx_t;
 #elif defined(SDFT_FD_LONG_DOUBLE)
-  typedef long double SDFT_FD_TYPE;
-  typedef long double complex SDFT_FDX_TYPE;
+  typedef long double sdft_fd_t;
+  typedef long double complex sdft_fdx_t;
 #else
   #define SDFT_FD_DOUBLE
-  typedef double SDFT_FD_TYPE;
-  typedef double complex SDFT_FDX_TYPE;
+  typedef double sdft_fd_t;
+  typedef double complex sdft_fdx_t;
 #endif
 
 struct sdft_plan_roi
@@ -41,44 +41,44 @@ struct sdft_plan_roi
   size_t second;
 };
 
-typedef struct sdft_plan_roi SDFT_ROI;
+typedef struct sdft_plan_roi sdft_roi_t;
 
 struct sdft_plan_analysis
 {
-  SDFT_ROI roi;
-  SDFT_FDX_TYPE* twiddles;
+  sdft_roi_t roi;
+  sdft_fdx_t* twiddles;
 
   size_t cursor;
   size_t maxcursor;
-  SDFT_TD_TYPE* input;
+  sdft_td_t* input;
 
-  SDFT_FDX_TYPE* accoutput;
-  SDFT_FDX_TYPE* auxoutput;
-  SDFT_FDX_TYPE* fiddles;
+  sdft_fdx_t* accoutput;
+  sdft_fdx_t* auxoutput;
+  sdft_fdx_t* fiddles;
 };
 
-typedef struct sdft_plan_analysis SDFT_ANALYSIS;
+typedef struct sdft_plan_analysis sdft_analysis_t;
 
 struct sdft_plan_synthesis
 {
-  SDFT_ROI roi;
-  SDFT_FDX_TYPE* twiddles;
+  sdft_roi_t roi;
+  sdft_fdx_t* twiddles;
 };
 
-typedef struct sdft_plan_synthesis SDFT_SYNTHESIS;
+typedef struct sdft_plan_synthesis sdft_synthesis_t;
 
 struct sdft_plan
 {
   size_t dftsize;
   double latency;
 
-  SDFT_ANALYSIS analysis;
-  SDFT_SYNTHESIS synthesis;
+  sdft_analysis_t analysis;
+  sdft_synthesis_t synthesis;
 };
 
-typedef struct sdft_plan SDFT;
+typedef struct sdft_plan sdft_t;
 
-SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a)
+sdft_fd_t sdft_acos(const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return acosf(a);
@@ -89,7 +89,7 @@ SDFT_FD_TYPE sdft_acos(const SDFT_FD_TYPE a)
   #endif
 }
 
-SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a)
+sdft_fd_t sdft_cos(const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return cosf(a);
@@ -100,7 +100,7 @@ SDFT_FD_TYPE sdft_cos(const SDFT_FD_TYPE a)
   #endif
 }
 
-SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z)
+sdft_fd_t sdft_real(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
     return crealf(z);
@@ -111,7 +111,7 @@ SDFT_FD_TYPE sdft_real(const SDFT_FDX_TYPE z)
   #endif
 }
 
-SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a)
+sdft_fdx_t sdft_polar(const sdft_fd_t r, const sdft_fd_t a)
 {
   #if defined(SDFT_FD_FLOAT)
     return r * cexpf(I * a);
@@ -122,7 +122,7 @@ SDFT_FDX_TYPE sdft_polar(const SDFT_FD_TYPE r, const SDFT_FD_TYPE a)
   #endif
 }
 
-SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z)
+sdft_fdx_t sdft_conj(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
     return conjf(z);
@@ -133,72 +133,69 @@ SDFT_FDX_TYPE sdft_conj(const SDFT_FDX_TYPE z)
   #endif
 }
 
-SDFT_TD_TYPE sdft_exchange(SDFT_TD_TYPE* old_value, const SDFT_TD_TYPE new_value)
+sdft_td_t sdft_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
 {
-  SDFT_TD_TYPE value = *old_value;
+  sdft_td_t value = *old_value;
   *old_value = new_value;
   return value;
 }
 
-SDFT_FDX_TYPE sdft_window(const SDFT_FDX_TYPE left,
-                          const SDFT_FDX_TYPE middle,
-                          const SDFT_FDX_TYPE right,
-                          const SDFT_FD_TYPE  weight)
+sdft_fdx_t sdft_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t  weight)
 {
-  return (SDFT_FD_TYPE)(0.25) * ((middle + middle) - (left + right)) * weight;
+  return (sdft_fd_t)(0.25) * ((middle + middle) - (left + right)) * weight;
 }
 
-SDFT* sdft_alloc_custom(const size_t dftsize, const double latency)
+sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
 {
-  SDFT* sdft = malloc(sizeof(SDFT));
+  sdft_t* sdft = malloc(sizeof(sdft_t));
 
   assert(sdft != NULL);
 
   sdft->dftsize = dftsize;
   sdft->latency = latency;
 
-  sdft->analysis.roi = (SDFT_ROI){ 0, dftsize };
-  sdft->synthesis.roi = (SDFT_ROI){ 0, dftsize };
+  sdft->analysis.roi = (sdft_roi_t){ 0, dftsize };
+  sdft->synthesis.roi = (sdft_roi_t){ 0, dftsize };
 
-  sdft->analysis.twiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
-  sdft->synthesis.twiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+  sdft->analysis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->synthesis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
 
   assert(sdft->analysis.twiddles != NULL);
   assert(sdft->synthesis.twiddles != NULL);
 
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
-  sdft->analysis.input = calloc(dftsize * 2, sizeof(SDFT_TD_TYPE));
+  sdft->analysis.input = calloc(dftsize * 2, sizeof(sdft_td_t));
 
-  sdft->analysis.accoutput = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
-  sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(SDFT_FDX_TYPE));
-  sdft->analysis.fiddles = calloc(dftsize, sizeof(SDFT_FDX_TYPE));
+  sdft->analysis.accoutput = calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(sdft_fdx_t));
+  sdft->analysis.fiddles = calloc(dftsize, sizeof(sdft_fdx_t));
 
   assert(sdft->analysis.input != NULL);
   assert(sdft->analysis.accoutput != NULL);
   assert(sdft->analysis.auxoutput != NULL);
   assert(sdft->analysis.fiddles != NULL);
 
-  const SDFT_FD_TYPE pi = (SDFT_FD_TYPE)(-2) * sdft_acos((SDFT_FD_TYPE)(-1)) / (dftsize * 2);
-  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(2) / ((SDFT_FD_TYPE)(1) - sdft_cos(pi * dftsize * latency));
+  const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_acos((sdft_fd_t)(-1)) / (dftsize * 2);
+  const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_cos(pi * dftsize * latency));
 
   for (size_t i = 0; i < dftsize; ++i)
   {
-    sdft->analysis.twiddles[i] = sdft_polar((SDFT_FD_TYPE)(1), pi * i);
+    sdft->analysis.twiddles[i] = sdft_polar((sdft_fd_t)(1), pi * i);
     sdft->synthesis.twiddles[i] = sdft_polar(weight, pi * i * dftsize * latency);
 
-    sdft->analysis.fiddles[i] = (SDFT_FD_TYPE)(1);
+    sdft->analysis.fiddles[i] = (sdft_fd_t)(1);
   }
 
   return sdft;
 }
 
-SDFT* sdft_alloc(const size_t dftsize)
+sdft_t* sdft_alloc(const size_t dftsize)
 {
   return sdft_alloc_custom(dftsize, 1);
 }
 
-void sdft_free(SDFT* sdft)
+void sdft_free(sdft_t* sdft)
 {
   if (sdft == NULL)
   {
@@ -245,26 +242,26 @@ void sdft_free(SDFT* sdft)
   sdft = NULL;
 }
 
-size_t sdft_size(const SDFT* sdft)
+size_t sdft_size(const sdft_t* sdft)
 {
   return (sdft != NULL) ? sdft->dftsize : 0;
 }
 
-void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
+void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
   // assert(dft.size() == sdft->dftsize);
 
   // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
   // but then requires a correction by factor 2 in synthesis and is therefore omitted
 
-  const SDFT_FD_TYPE weight = (SDFT_FD_TYPE)(1) / sdft->dftsize;
+  const sdft_fd_t weight = (sdft_fd_t)(1) / sdft->dftsize;
 
-  const SDFT_FD_TYPE delta = sample - sdft_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
+  const sdft_fd_t delta = sample - sdft_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
 
   for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
-    const SDFT_FDX_TYPE oldfiddle = sdft->analysis.fiddles[i];
-    const SDFT_FDX_TYPE newfiddle = oldfiddle * sdft->analysis.twiddles[i];
+    const sdft_fdx_t oldfiddle = sdft->analysis.fiddles[i];
+    const sdft_fdx_t newfiddle = oldfiddle * sdft->analysis.twiddles[i];
 
     sdft->analysis.fiddles[i] = newfiddle;
 
@@ -297,7 +294,7 @@ void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
   }
 }
 
-void sdft_sdft_n(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples, SDFT_FDX_TYPE* const dfts)
+void sdft_sdft_n(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t* const dfts)
 {
   for (size_t i = 0; i < nsamples; ++i)
   {
@@ -305,7 +302,7 @@ void sdft_sdft_n(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples,
   }
 }
 
-void sdft_sdft_nd(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples, SDFT_FDX_TYPE** const dfts)
+void sdft_sdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t** const dfts)
 {
   for (size_t i = 0; i < nsamples; ++i)
   {
@@ -313,11 +310,11 @@ void sdft_sdft_nd(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples
   }
 }
 
-SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
+sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 {
   // assert(dft.size() == dftsize);
 
-  SDFT_FD_TYPE sample = (SDFT_FD_TYPE)(0);
+  sdft_fd_t sample = (sdft_fd_t)(0);
 
   if (sdft->latency == 1)
   {
@@ -334,10 +331,10 @@ SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
     }
   }
 
-  return (SDFT_TD_TYPE)(sample);
+  return (sdft_td_t)(sample);
 }
 
-void sdft_isdft_n(SDFT* sdft, const size_t nsamples, const SDFT_FDX_TYPE* dfts, SDFT_TD_TYPE* const samples)
+void sdft_isdft_n(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t* dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
 
@@ -347,7 +344,7 @@ void sdft_isdft_n(SDFT* sdft, const size_t nsamples, const SDFT_FDX_TYPE* dfts, 
   }
 }
 
-void sdft_isdft_nd(SDFT* sdft, const size_t nsamples, const SDFT_FDX_TYPE** dfts, SDFT_TD_TYPE* const samples)
+void sdft_isdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t** dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
 
