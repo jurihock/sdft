@@ -22,14 +22,14 @@ int main(int argc, char *argv[])
 
   float* samples;
   size_t size;
-  double sr;
+  size_t sr;
 
   if (!readwav(ifile, &samples, &size, &sr))
   {
     return 1;
   }
 
-  printf("C++\t%s %zu %gHz\n", ifile, size, sr);
+  printf("C++\t%s %zu %zuHz\n", ifile, size, sr);
   size = (size / hopsize) * hopsize;
 
   std::complex<double>* buffer = new std::complex<double>[hopsize * dftsize];
