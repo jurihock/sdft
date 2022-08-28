@@ -33,7 +33,6 @@ def main():
     for hop, samples in enumerate(hops):
 
         print(f'{hop+1}/{len(hops)}')
-
         y[hop] = sdft.sdft(samples)[0]
 
     y.tofile(ofile)

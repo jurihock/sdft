@@ -1,16 +1,9 @@
 #include <cstdio>
-#include <iostream>
 
 #include <sdft/sdft.h>
 
+#include <dump.h>
 #include <wav.h>
-
-void dump(const char* path, const std::complex<double>* data, const size_t size)
-{
-  FILE* file = fopen(path, "wb");
-  fwrite(data, sizeof(std::complex<double>), size, file);
-  fclose(file);
-}
 
 int main()
 {
@@ -31,8 +24,7 @@ int main()
     return 1;
   }
 
-  std::cout << "C++\t" << ifile << " " << size << " " << sr << "Hz" << std::endl;
-
+  printf("C++\t%s %zu %gHz\n", ifile, size, sr);
   size = (size / hopsize) * hopsize;
 
   std::complex<double>* buffer = new std::complex<double>[hopsize * dftsize];
@@ -40,10 +32,8 @@ int main()
 
   for (size_t i = 0, j = 0; i < size; i+=hopsize, j++)
   {
-    std::cout << i / hopsize + 1 << "/" << size / hopsize << std::endl;
-
+    printf("%zu/%zu\n", i / hopsize + 1, size / hopsize);
     sdft.sdft(hopsize, samples + i, buffer);
-
     memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(std::complex<double>));
   }
 
