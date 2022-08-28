@@ -1,3 +1,17 @@
+/**
+ * Modulated Sliding DFT implementation according to [1] combined with [2].
+ *
+ * [1] Krzysztof Duda
+ *     Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform
+ *     IEEE Signal Processing Magazine (2010)
+ *     https://ieeexplore.ieee.org/document/5563098
+ *
+ * [2] Russell Bradford and Richard Dobson and John ffitch
+ *     Sliding is Smoother than Jumping
+ *     International Computer Music Conference (2005)
+ *     http://hdl.handle.net/2027/spo.bbp2372.2005.086
+ **/
+
 #pragma once
 
 #include <assert.h>

@@ -9,7 +9,7 @@
  * [2] Russell Bradford and Richard Dobson and John ffitch
  *     Sliding is Smoother than Jumping
  *     International Computer Music Conference (2005)
- *     https://quod.lib.umich.edu/cgi/p/pod/dod-idx/sliding-is-smoother-than-jumping.pdf?c=icmc;idno=bbp2372.2005.086;format=pdf
+ *     http://hdl.handle.net/2027/spo.bbp2372.2005.086
  **/
 
 #pragma once
