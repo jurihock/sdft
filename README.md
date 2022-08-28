@@ -1,6 +1,6 @@
 # Sliding Discrete Fourier Transform (SDFT)
 
-Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) and with following goodies:
+Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) with following goodies:
 
 - Arbitrary number of DFT bins
 - Hann window at analysis
