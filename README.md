@@ -1,5 +1,9 @@
 # Sliding Discrete Fourier Transform (SDFT)
 
+![language](https://img.shields.io/badge/languages-C%2FC%2B%2B%20Python-blue)
+![license](https://img.shields.io/github/license/jurihock/sdft?color=green)
+![pypi](https://img.shields.io/pypi/v/sdft?color=gold)
+
 Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) with following goodies:
 
 - Arbitrary number of DFT bins
