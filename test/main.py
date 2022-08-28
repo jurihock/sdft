@@ -33,8 +33,10 @@ def main():
     shapes = list(set([dfts.shape for dfts in y.values()]))
     assert len(shapes) == 1, f'{shapes}'
 
+    assert np.allclose(y['c'], y['cpp']), np.abs(y['c'] - y['cpp']).flatten().max()
+    assert np.allclose(y['c'], y['py'], atol=1e-7), np.abs(y['c'] - y['py']).flatten().max()
+
     figure('c').spectrogram(y['c'], sr, hopsize, ylim=(500, 15e3), yscale='log')
-    figure('cpp').spectrogram(y['cpp'], sr, hopsize, ylim=(500, 15e3), yscale='log')
     figure('py').spectrogram(y['py'], sr, hopsize, ylim=(500, 15e3), yscale='log')
     show()
 
