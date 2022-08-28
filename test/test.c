@@ -36,9 +36,18 @@ int main(int argc, char* argv[])
   double complex* buffer = malloc(hopsize * dftsize * sizeof(double complex));
   double complex* dfts = malloc((size / hopsize) * dftsize * sizeof(double complex));
 
+  int progress = 0;
+
   for (size_t i = 0, j = 0; i < size; i+=hopsize, j++)
   {
-    printf("%zu/%zu\n", i / hopsize + 1, size / hopsize);
+    const double percent = (i / hopsize + 1.0) / (size / hopsize);
+
+    if ((int)(percent * 10) != progress)
+    {
+        progress = (int)(percent * 10);
+        printf("%i%%\n", progress * 10);
+    }
+
     sdft_sdft_n(sdft, hopsize, samples + i, buffer);
     memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(double complex));
   }

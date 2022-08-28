@@ -33,9 +33,16 @@ def main():
 
     y = np.ndarray((len(hops), dftsize), complex)
 
+    progress = 0
+
     for hop, samples in enumerate(hops):
 
-        print(f'{hop+1}/{len(hops)}')
+        percent = (hop + 1) / len(hops)
+
+        if int(percent * 10) != progress:
+            progress = int(percent * 10)
+            print(f'{progress * 10}%')
+
         y[hop] = sdft.sdft(samples)[0]
 
     y.tofile(ofile)
