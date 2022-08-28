@@ -1,6 +1,12 @@
 # Sliding Discrete Fourier Transform (SDFT)
 
-According to [[1]](#1) and [[2]](#2).
+Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) and with following goodies:
+
+- Arbitrary number of DFT bins
+- Hann window at analysis
+- Single or multiple sample processing at once
+- Continuous data processing without resets
+- Optional synthesis latency control parameter
 
 ## Usage
 
