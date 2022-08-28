@@ -21,15 +21,15 @@ Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) with following goo
 size_t n = ...; // number of samples
 size_t m = ...; // number of dft bins
 
-float* input = ...; // analysis samples of shape (n)
-float* output = ...; // synthesis samples of shape (n)
+float* x = ...; // analysis samples of shape (n)
+float* y = ...; // synthesis samples of shape (n)
 
 double complex* dft = ...; // dft matrix of shape (n, m)
 
 sdft_t* sdft = sdft_alloc(m); // create sdft plan
 
-sdft_sdft_n(sdft, n, input, dft); // extract dft matrix from input samples
-sdft_isdft_n(sdft, n, dft, output); // synthesize output samples from dft matrix
+sdft_sdft_n(sdft, n, x, dft); // extract dft matrix from input samples
+sdft_isdft_n(sdft, n, dft, y); // synthesize output samples from dft matrix
 
 sdft_free(sdft); // destroy sdft plan
 ```
@@ -42,15 +42,15 @@ sdft_free(sdft); // destroy sdft plan
 size_t n = ...; // number of samples
 size_t m = ...; // number of dft bins
 
-float* input = ...; // analysis samples of shape (n)
-float* output = ...; // synthesis samples of shape (n)
+float* x = ...; // analysis samples of shape (n)
+float* y = ...; // synthesis samples of shape (n)
 
 std::complex<double>* dft = ...; // dft matrix of shape (n, m)
 
 SDFT<float, double> sdft(m); // create sdft plan with time/frequency domain data type
 
-sdft.sdft(n, input, dft); // extract dft matrix from input samples
-sdft.isdft(n, dft, output); // synthesize output samples from dft matrix
+sdft.sdft(n, x, dft); // extract dft matrix from input samples
+sdft.isdft(n, dft, y); // synthesize output samples from dft matrix
 ```
 
 ### Python
@@ -61,12 +61,12 @@ from sdft import SDFT # see also src/python folder
 n = ... # number of samples
 m = ... # number of dft bins
 
-input = ... # analysis samples of shape (n)
+x = ... # analysis samples of shape (n)
 
 sdft = SDFT(m) # create sdft plan
 
 dft = sdft.sdft(input) # extract dft matrix from input samples
-output = sdft.isdft(dft) # synthesize output samples from dft matrix
+y = sdft.isdft(dft) # synthesize output samples from dft matrix
 ```
 
 ## References
