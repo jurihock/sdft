@@ -3,7 +3,7 @@ import sys
 import wave
 
 
-def read(path):
+def readwav(path):
 
     with wave.open(path, 'rb') as file:
         sr = file.getframerate()

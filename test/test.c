@@ -17,7 +17,7 @@ int main()
   size_t size;
   double sr;
 
-  if (!read(file, &data, &size, &sr))
+  if (!readwav(file, &data, &size, &sr))
   {
     return 1;
   }
@@ -26,21 +26,20 @@ int main()
 
   size = (size / hopsize) * hopsize;
 
+  const size_t nsamples = size / hopsize;
+
+  double complex* dfts = malloc(nsamples * dftsize * sizeof(double complex));
+
   for (size_t i = 0; i < size; i+=hopsize)
   {
     printf("%zu/%zu\n", i / hopsize + 1, size / hopsize);
 
-    const size_t nsamples = size / hopsize;
-    const size_t dftsize = sdft_size(sdft);
-
     float* samples = data + i;
-    double complex* dfts = malloc(nsamples * dftsize * sizeof(double complex));
 
     sdft_sdft_n(sdft, nsamples, samples, dfts);
-
-    free(dfts);
   }
 
+  free(dfts);
   free(data);
   sdft_free(sdft);
 

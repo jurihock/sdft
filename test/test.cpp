@@ -16,7 +16,7 @@ int main()
   size_t size;
   double sr;
 
-  if (!read(file, &data, &size, &sr))
+  if (!readwav(file, &data, &size, &sr))
   {
     return 1;
   }
@@ -25,22 +25,20 @@ int main()
 
   size = (size / hopsize) * hopsize;
 
+  const size_t nsamples = size / hopsize;
+  std::complex<double>* dfts = new std::complex<double>[nsamples * dftsize];
+
   for (size_t i = 0; i < size; i+=hopsize)
   {
     std::cout << i / hopsize + 1 << "/" << size / hopsize << std::endl;
 
-    const size_t nsamples = size / hopsize;
-    const size_t dftsize = sdft.size();
-
     float* samples = data + i;
-    std::complex<double>* dfts = new std::complex<double>[nsamples * dftsize];
 
     sdft.sdft(nsamples, samples, dfts);
-
-    delete[] dfts;
   }
 
-  free(data);
+  delete[] dfts;
+  delete[] data;
 
   return 0;
 }

@@ -9,7 +9,7 @@ sys.path.insert(0, python)
 
 
 from sdft import SDFT
-from wav import read
+from wav import readwav
 from plot import spectrogram
 
 
@@ -21,7 +21,7 @@ def main():
 
     sdft = SDFT(dftsize)
 
-    x, sr = read(file)
+    x, sr = readwav(file)
     size = (x.size // hopsize) * hopsize
 
     x = x[:size]

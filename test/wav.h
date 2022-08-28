@@ -5,7 +5,25 @@
 
 #include <dr_wav.h>
 
-bool read(const char* path, float** data, size_t* size, double* samplerate)
+float* allocwav(const size_t size)
+{
+  #if defined(__cplusplus)
+    return new float[size];
+  #else
+    return malloc(size * sizeof(float));
+  #endif
+}
+
+void freewav(float* data)
+{
+  #if defined(__cplusplus)
+    delete[] data;
+  #else
+    free(data);
+  #endif
+}
+
+bool readwav(const char* path, float** data, size_t* size, double* samplerate)
 {
   (*data) = NULL;
   (*size) = 0;
@@ -29,14 +47,14 @@ bool read(const char* path, float** data, size_t* size, double* samplerate)
     return false;
   }
 
-  (*data) = (float*)malloc(samples * channels * sizeof(float));
+  (*data) = allocwav(samples * channels);
   (*size) = samples * channels;
 
   if (drwav_read_pcm_frames_f32(&wav, samples, (*data)) != samples)
   {
     drwav_uninit(&wav);
 
-    free(*data);
+    freewav(*data);
 
     (*data) = NULL;
     (*size) = 0;
