@@ -90,7 +90,7 @@ bool writewav(const char* path, const float* data, const size_t size, const size
 {
   const size_t samples = size;
   const size_t channels = 1;
-  const size_t bytes = samples * channels * sizeof(float);
+  const size_t bytes = samples * channels * sizeof(drwav_int32);
 
   if (bytes > DRWAV_SIZE_MAX)
   {
@@ -101,8 +101,8 @@ bool writewav(const char* path, const float* data, const size_t size, const size
   drwav_data_format format;
 
   format.container = drwav_container_riff;
-  format.format = DR_WAVE_FORMAT_IEEE_FLOAT;
-  format.bitsPerSample = sizeof(float) * 8;
+  format.format = DR_WAVE_FORMAT_PCM;
+  format.bitsPerSample = sizeof(drwav_uint32) * 8;
   format.channels = channels;
   format.sampleRate = samplerate;
 
@@ -111,9 +111,18 @@ bool writewav(const char* path, const float* data, const size_t size, const size
     return false;
   }
 
-  if (drwav_write_pcm_frames(&wav, samples, data) != samples)
+  drwav_int32* data32 = (drwav_int32*)malloc(samples * sizeof(drwav_int32));
+  drwav_f32_to_s32(data32, data, samples);
+
+  if (drwav_write_pcm_frames(&wav, samples, data32) != samples)
   {
+    free(data32);
+
     return false;
+  }
+  else
+  {
+    free(data32);
   }
 
   if (drwav_uninit(&wav) != DRWAV_SUCCESS)
