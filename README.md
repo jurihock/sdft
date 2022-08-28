@@ -15,8 +15,8 @@ According to [[1]](#1) and [[2]](#2).
 size_t n = ...; // number of samples
 size_t m = ...; // number of dft bins
 
-float* input = ...; // analysis samples
-float* output = ...; // synthesis samples
+float* input = ...; // analysis samples of shape (n)
+float* output = ...; // synthesis samples of shape (n)
 
 double complex* dft = ...; // dft matrix of shape (n, m)
 
@@ -36,8 +36,8 @@ sdft_free(sdft); // destroy sdft plan
 size_t n = ...; // number of samples
 size_t m = ...; // number of dft bins
 
-float* input = ...; // analysis samples
-float* output = ...; // synthesis samples
+float* input = ...; // analysis samples of shape (n)
+float* output = ...; // synthesis samples of shape (n)
 
 std::complex<double>* dft = ...; // dft matrix of shape (n, m)
 
@@ -45,6 +45,22 @@ SDFT<float, double> sdft(m); // create sdft plan with time/frequency domain data
 
 sdft.sdft(n, input, dft); // extract dft matrix from input samples
 sdft.isdft(n, dft, output); // synthesize output samples from dft matrix
+```
+
+### Python
+
+```python
+from sdft import SDFT # see also src/python folder
+
+n = ... # number of samples
+m = ... # number of dft bins
+
+input = ... # analysis samples of shape (n)
+
+sdft = SDFT(m) # create sdft plan
+
+dft = sdft.sdft(input) # extract dft matrix from input samples
+output = sdft.isdft(dft) # synthesize output samples from dft matrix
 ```
 
 ## References
