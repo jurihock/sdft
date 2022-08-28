@@ -7,31 +7,32 @@
 
 int main(int argc, char *argv[])
 {
-  if (argc < 5)
+  if (argc < 6)
   {
     return 1;
   }
 
   const size_t dftsize = atoi(argv[1]);
   const size_t hopsize = atoi(argv[2]);
-
-  const char* ifile = argv[3];
-  const char* ofile = argv[4];
+  const char* srcfile = argv[3];
+  const char* wavfile = argv[4];
+  const char* dftfile = argv[5];
 
   SDFT<float> sdft(dftsize);
 
-  float* samples;
+  float* input;
   size_t size;
   size_t sr;
 
-  if (!readwav(ifile, &samples, &size, &sr))
+  if (!readwav(srcfile, &input, &size, &sr))
   {
     return 1;
   }
 
-  printf("C++\t%s %zu %zuHz\n", ifile, size, sr);
+  printf("C++\t%s %zu %zuHz\n", srcfile, size, sr);
   size = (size / hopsize) * hopsize;
 
+  float* output = new float[size];
   std::complex<double>* buffer = new std::complex<double>[hopsize * dftsize];
   std::complex<double>* dfts = new std::complex<double>[(size / hopsize) * dftsize];
 
@@ -47,15 +48,19 @@ int main(int argc, char *argv[])
         printf("%i%%\n", progress * 10);
     }
 
-    sdft.sdft(hopsize, samples + i, buffer);
+    sdft.sdft(hopsize, input + i, buffer);
+    sdft.isdft(hopsize, buffer, output + i);
+
     memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(std::complex<double>));
   }
 
-  dump(ofile, dfts, (size / hopsize) * dftsize);
+  writewav(wavfile, output, size, sr);
+  dump(dftfile, dfts, (size / hopsize) * dftsize);
 
   delete[] dfts;
   delete[] buffer;
-  delete[] samples;
+  delete[] output;
+  delete[] input;
 
   return 0;
 }

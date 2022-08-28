@@ -28,3 +28,30 @@ def readwav(path):
     data = data.mean(axis=-1)
 
     return data, sr
+
+
+def writewav(path, data, sr, bits=32):
+
+    data = numpy.asarray(data)
+
+    assert data.dtype == float
+    assert data.ndim == 1
+    assert data.size > 0
+
+    assert bits in [8, 16, 24, 32]
+    bytes = bits // 8
+    scaler = 2 ** (bits - 1) - 1
+
+    data = data.clip(-1, +1)
+    data = (data * (scaler + 0.5)) - 0.5
+    data += 128 if bits == 8 else 0  # to unsigned 8bit
+
+    data = b''.join([
+        int(frame).to_bytes(length=bytes, signed=(bits != 8), byteorder=sys.byteorder)
+        for frame in data])
+
+    with wave.open(path, 'wb') as file:
+        file.setframerate(sr)
+        file.setsampwidth(bytes)
+        file.setnchannels(1)
+        file.writeframes(data)
