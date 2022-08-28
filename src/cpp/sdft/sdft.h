@@ -107,15 +107,25 @@ public:
     }
   }
 
-  // void sdft(const voyx::vector<T> samples, voyx::matrix<std::complex<F>> dfts)
-  // {
-  //   // assert(samples.size() == dfts.size());
+  void sdft(const size_t nsamples, const T* samples, std::complex<F>* const dfts)
+  {
+    // assert(samples.size() == dfts.size());
 
-  //   for (size_t i = 0; i < samples.size(); ++i)
-  //   {
-  //     sdft(samples[i], dfts[i]);
-  //   }
-  // }
+    for (size_t i = 0; i < nsamples; ++i)
+    {
+      sdft(samples[i], &dfts[i * dftsize]);
+    }
+  }
+
+  void sdft(const size_t nsamples, const T* samples, std::complex<F>** const dfts)
+  {
+    // assert(samples.size() == dfts.size());
+
+    for (size_t i = 0; i < nsamples; ++i)
+    {
+      sdft(samples[i], dfts[i]);
+    }
+  }
 
   T isdft(const std::complex<F>* dft)
   {
@@ -141,15 +151,25 @@ public:
     return static_cast<T>(sample);
   }
 
-  // void isdft(const voyx::matrix<std::complex<F>> dfts, voyx::vector<T> samples)
-  // {
-  //   // assert(samples.size() == dfts.size());
+  void isdft(const size_t nsamples, const std::complex<F>* dfts, T* const samples)
+  {
+    // assert(samples.size() == dfts.size());
 
-  //   for (size_t i = 0; i < samples.size(); ++i)
-  //   {
-  //     samples[i] = isdft(dfts[i]);
-  //   }
-  // }
+    for (size_t i = 0; i < nsamples; ++i)
+    {
+      samples[i] = isdft(&dfts[i * dftsize]);
+    }
+  }
+
+  void isdft(const size_t nsamples, const std::complex<F>** dfts, T* const samples)
+  {
+    // assert(samples.size() == dfts.size());
+
+    for (size_t i = 0; i < nsamples; ++i)
+    {
+      samples[i] = isdft(dfts[i]);
+    }
+  }
 
 private:
 

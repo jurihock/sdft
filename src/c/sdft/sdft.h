@@ -297,6 +297,22 @@ void sdft_sdft(SDFT* sdft, const SDFT_TD_TYPE sample, SDFT_FDX_TYPE* const dft)
   }
 }
 
+void sdft_sdft_n(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples, SDFT_FDX_TYPE* const dfts)
+{
+  for (size_t i = 0; i < nsamples; ++i)
+  {
+    sdft_sdft(sdft, samples[i], &dfts[i * sdft->dftsize]);
+  }
+}
+
+void sdft_sdft_nd(SDFT* sdft, const size_t nsamples, const SDFT_TD_TYPE* samples, SDFT_FDX_TYPE** const dfts)
+{
+  for (size_t i = 0; i < nsamples; ++i)
+  {
+    sdft_sdft(sdft, samples[i], dfts[i]);
+  }
+}
+
 SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
 {
   // assert(dft.size() == dftsize);
@@ -319,6 +335,26 @@ SDFT_TD_TYPE sdft_isdft(SDFT* sdft, const SDFT_FDX_TYPE* dft)
   }
 
   return (SDFT_TD_TYPE)(sample);
+}
+
+void sdft_isdft_n(SDFT* sdft, const size_t nsamples, const SDFT_FDX_TYPE* dfts, SDFT_TD_TYPE* const samples)
+{
+  // assert(samples.size() == dfts.size());
+
+  for (size_t i = 0; i < nsamples; ++i)
+  {
+    samples[i] = sdft_isdft(sdft, &dfts[i * sdft->dftsize]);
+  }
+}
+
+void sdft_isdft_nd(SDFT* sdft, const size_t nsamples, const SDFT_FDX_TYPE** dfts, SDFT_TD_TYPE* const samples)
+{
+  // assert(samples.size() == dfts.size());
+
+  for (size_t i = 0; i < nsamples; ++i)
+  {
+    samples[i] = sdft_isdft(sdft, dfts[i]);
+  }
 }
 
 #if defined(__cplusplus)
