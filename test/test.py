@@ -27,9 +27,7 @@ def main():
     newsize = (x.size // hopsize) * hopsize
 
     x = x[:newsize]
-
     hops = np.split(x, newsize // hopsize)
-
     y = np.ndarray((len(hops), dftsize), complex)
 
     for hop, samples in enumerate(hops):
@@ -39,7 +37,7 @@ def main():
         dfts = sdft.sdft(samples)
         y[hop] = dfts[0]
 
-    spectrogram(y, sr, hopsize, ylim=(500, 15e3), ylog=True).show()
+    spectrogram(y, sr, hopsize, ylim=(500, 15e3), yscale='log').show()
 
 
 if __name__ == '__main__':
