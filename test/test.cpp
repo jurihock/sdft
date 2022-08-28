@@ -1,44 +1,57 @@
+#include <cstdio>
 #include <iostream>
 
 #include <sdft/sdft.h>
 
 #include <wav.h>
 
+void dump(const char* path, const std::complex<double>* data, const size_t size)
+{
+  FILE* file = fopen(path, "wb");
+  fwrite(data, sizeof(std::complex<double>), size, file);
+  fclose(file);
+}
+
 int main()
 {
   const size_t dftsize = 512;
   const size_t hopsize = 1000;
-  const char* file = "test.wav";
+
+  const char* ifile = "test.wav";
+  const char* ofile = "test.cpp.dfts";
 
   SDFT<float> sdft(dftsize);
 
-  float* data;
+  float* samples;
   size_t size;
   double sr;
 
-  if (!readwav(file, &data, &size, &sr))
+  if (!readwav(ifile, &samples, &size, &sr))
   {
     return 1;
   }
 
-  std::cout << "C++\t" << file << " " << size << " " << sr << "Hz" << std::endl;
+  std::cout << "C++\t" << ifile << " " << size << " " << sr << "Hz" << std::endl;
 
   size = (size / hopsize) * hopsize;
 
-  const size_t nsamples = size / hopsize;
-  std::complex<double>* dfts = new std::complex<double>[nsamples * dftsize];
+  std::complex<double>* buffer = new std::complex<double>[hopsize * dftsize];
+  std::complex<double>* dfts = new std::complex<double>[(size / hopsize) * dftsize];
 
-  for (size_t i = 0; i < size; i+=hopsize)
+  for (size_t i = 0, j = 0; i < size; i+=hopsize, j++)
   {
     std::cout << i / hopsize + 1 << "/" << size / hopsize << std::endl;
 
-    float* samples = data + i;
+    sdft.sdft(hopsize, samples + i, buffer);
 
-    sdft.sdft(nsamples, samples, dfts);
+    memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(std::complex<double>));
   }
 
+  dump(ofile, dfts, (size / hopsize) * dftsize);
+
   delete[] dfts;
-  delete[] data;
+  delete[] buffer;
+  delete[] samples;
 
   return 0;
 }

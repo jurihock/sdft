@@ -3,9 +3,8 @@ import os
 import sys
 
 
-python = os.path.join(os.path.dirname(__file__), '..', 'src', 'python')
-
-sys.path.insert(0, python)
+sys.path.insert(0, os.path.join(
+    os.path.dirname(__file__), '..', 'src', 'python'))
 
 
 from sdft import SDFT
@@ -17,11 +16,16 @@ def main():
 
     dftsize = 512
     hopsize = 1000
-    file = 'test.wav'
+
+    ifile = 'test.wav'
+    ofile = 'test.py.dfts'
 
     sdft = SDFT(dftsize)
 
-    x, sr = readwav(file)
+    x, sr = readwav(ifile)
+    size = x.size
+
+    print(f'PY\t{ifile} {size} {sr}');
     size = (x.size // hopsize) * hopsize
 
     x = x[:size]
@@ -33,10 +37,9 @@ def main():
 
         print(f'{hop+1}/{len(hops)}')
 
-        dfts = sdft.sdft(samples)
-        y[hop] = dfts[0]
+        y[hop] = sdft.sdft(samples)[0]
 
-    spectrogram(y, sr, hopsize, ylim=(500, 15e3), yscale='log').show()
+    y.tofile(ofile)
 
 
 if __name__ == '__main__':
