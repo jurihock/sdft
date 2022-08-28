@@ -10,5 +10,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-test*.dft
-test*.wav
+test.*.dft
+test.*.wav
+test.wav
