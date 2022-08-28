@@ -18,14 +18,33 @@ size_t m = ...; // number of dft bins
 float* input = ...; // analysis samples
 float* output = ...; // synthesis samples
 
-double complex* dfts = ...; // dft matrix of shape (n, m)
+double complex* dft = ...; // dft matrix of shape (n, m)
 
 sdft_t* sdft = sdft_alloc(m); // create sdft plan
 
-sdft_sdft_n(sdft, n, input, dfts); // extract dft matrix from input samples
-sdft_isdft_n(sdft, n, dfts, output); // synthesize output samples from dft matrix
+sdft_sdft_n(sdft, n, input, dft); // extract dft matrix from input samples
+sdft_isdft_n(sdft, n, dft, output); // synthesize output samples from dft matrix
 
 sdft_free(sdft); // destroy sdft plan
+```
+
+### C++
+
+```c++
+#include <sdft/sdft.h> // see also src/cpp folder
+
+size_t n = ...; // number of samples
+size_t m = ...; // number of dft bins
+
+float* input = ...; // analysis samples
+float* output = ...; // synthesis samples
+
+std::complex<double>* dft = ...; // dft matrix of shape (n, m)
+
+SDFT<float, double> sdft(m); // create sdft plan with time/frequency domain data type
+
+sdft.sdft(n, input, dft); // extract dft matrix from input samples
+sdft.isdft(n, dft, output); // synthesize output samples from dft matrix
 ```
 
 ## References
