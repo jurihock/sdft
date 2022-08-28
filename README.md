@@ -65,7 +65,7 @@ x = ... # analysis samples of shape (n)
 
 sdft = SDFT(m) # create sdft plan
 
-dft = sdft.sdft(input) # extract dft matrix from input samples
+dft = sdft.sdft(x) # extract dft matrix from input samples
 y = sdft.isdft(dft) # synthesize output samples from dft matrix
 ```
 
