@@ -1,48 +1,30 @@
-file(GLOB_RECURSE
-  HDR "${CMAKE_CURRENT_LIST_DIR}/*.h")
+foreach(XXX c cpp)
 
-# C
+  project(sdft-test-${XXX})
 
-project(sdft-test-c)
+  add_executable(${PROJECT_NAME})
 
-add_executable(${PROJECT_NAME})
+  file(GLOB_RECURSE
+    HDR "${CMAKE_CURRENT_LIST_DIR}/*.h")
 
-target_sources(${PROJECT_NAME}
-  PRIVATE ${HDR} "${CMAKE_CURRENT_LIST_DIR}/test.c")
+  file(GLOB_RECURSE
+    SRC "${CMAKE_CURRENT_LIST_DIR}/*.${XXX}")
 
-target_include_directories(${PROJECT_NAME}
-  PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
+  target_sources(${PROJECT_NAME}
+    PRIVATE ${HDR} "${SRC}")
 
-target_link_libraries(${PROJECT_NAME}
-  PRIVATE sdft::c dr_libs)
+  target_include_directories(${PROJECT_NAME}
+    PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
 
-if (MSVC)
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE /fp:fast)
-else()
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE -ffast-math)
-endif()
+  target_link_libraries(${PROJECT_NAME}
+    PRIVATE sdft::${XXX} dr_libs)
 
-# C++
+  if (MSVC)
+    target_compile_options(${PROJECT_NAME}
+      PRIVATE /fp:fast)
+  else()
+    target_compile_options(${PROJECT_NAME}
+      PRIVATE -ffast-math)
+  endif()
 
-project(sdft-test-cpp)
-
-add_executable(${PROJECT_NAME})
-
-target_sources(${PROJECT_NAME}
-  PRIVATE ${HDR} "${CMAKE_CURRENT_LIST_DIR}/test.cpp")
-
-target_include_directories(${PROJECT_NAME}
-  PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
-
-target_link_libraries(${PROJECT_NAME}
-  PRIVATE sdft::cpp dr_libs)
-
-if (MSVC)
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE /fp:fast)
-else()
-  target_compile_options(${PROJECT_NAME}
-    PRIVATE -ffast-math)
-endif()
+endforeach()
