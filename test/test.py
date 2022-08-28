@@ -11,11 +11,14 @@ from wav import readwav
 
 def main():
 
-    dftsize = 512
-    hopsize = 1000
+    if len(sys.argv) < 5:
+        exit(1)
 
-    ifile = 'test.wav'
-    ofile = 'test.py.dfts'
+    dftsize = int(sys.argv[1])
+    hopsize = int(sys.argv[2])
+
+    ifile = sys.argv[3]
+    ofile = sys.argv[4]
 
     sdft = SDFT(dftsize)
 

@@ -5,13 +5,18 @@
 #include <dump.h>
 #include <wav.h>
 
-int main()
+int main(int argc, char *argv[])
 {
-  const size_t dftsize = 512;
-  const size_t hopsize = 1000;
+  if (argc < 5)
+  {
+    return 1;
+  }
 
-  const char* ifile = "test.wav";
-  const char* ofile = "test.cpp.dfts";
+  const size_t dftsize = atoi(argv[1]);
+  const size_t hopsize = atoi(argv[2]);
+
+  const char* ifile = argv[3];
+  const char* ofile = argv[4];
 
   SDFT<float> sdft(dftsize);
 

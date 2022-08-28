@@ -8,16 +8,19 @@ from wav import readwav
 
 def main():
 
-    dftsize = 512
-    hopsize = 1000
+    if len(sys.argv) < 5:
+        exit(1)
 
-    ifile = 'test.wav'
-    ofile = 'test.*.dfts'
+    dftsize = int(sys.argv[1])
+    hopsize = int(sys.argv[2])
+
+    ifile = sys.argv[3]
+    ofile = sys.argv[4]
 
     ofiles = {
-        'c': f'../build/{ofile.replace("*", "c")}',
-        'cpp': f'../build/{ofile.replace("*", "cpp")}',
-        'py': f'{ofile.replace("*", "py")}'
+        'c':   f'{ofile.format("c")}',
+        'cpp': f'{ofile.format("cpp")}',
+        'py':  f'{ofile.format("py")}'
     }
 
     x, sr = readwav(ifile)
