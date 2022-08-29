@@ -1,4 +1,4 @@
-'''
+"""
 Modulated Sliding DFT implementation according to [1] combined with [2].
 
 [1] Krzysztof Duda
@@ -10,15 +10,30 @@ Modulated Sliding DFT implementation according to [1] combined with [2].
     Sliding is Smoother than Jumping
     International Computer Music Conference (2005)
     http://hdl.handle.net/2027/spo.bbp2372.2005.086
-'''
+"""
 
 
 import numpy
 
 
 class SDFT:
+    """
+    Sliding Discrete Fourier Transform (SDFT).
+    """
 
     def __init__(self, dftsize, latency=1):
+        """
+        Create a new SDFT plan.
+
+        Parameters
+        ----------
+        dftsize : int
+            Desired number of DFT bins.
+        latency : float
+            Synthesis latency factor between 0 and 1.
+            The default value 1 corresponds to the highest latency and best possible SNR.
+            A smaller value decreases both latency and SNR, but also increases the workload.
+        """
 
         self.dftsize = dftsize
         self.latency = latency
@@ -28,6 +43,19 @@ class SDFT:
         self.accumulator = numpy.zeros(dftsize, complex)
 
     def sdft(self, samples):
+        """
+        Estimate the DFT matrix for the given sample array.
+
+        Parameters
+        ----------
+        samples : ndarray, list, float
+            Array of samples.
+
+        Returns
+        -------
+        dfts : ndarray
+            DFT matrix of shape (samples,frequencies).
+        """
 
         samples = numpy.atleast_1d(samples)
 
@@ -59,6 +87,19 @@ class SDFT:
         return dfts
 
     def isdft(self, dfts):
+        """
+        Synthesize the sample array from the given DFT matrix.
+
+        Parameters
+        ----------
+        dfts : ndarray
+            DFT matrix of shape (samples,frequencies).
+
+        Returns
+        -------
+        samples : ndarray
+            Array of samples.
+        """
 
         dfts = numpy.atleast_2d(dfts)
 
@@ -77,6 +118,9 @@ class SDFT:
         return samples
 
     def window(self, x):
+        """
+        Applies Hann window to the specified DFT matrix.
+        """
 
         x = numpy.atleast_2d(x)
 

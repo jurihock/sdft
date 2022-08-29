@@ -21,12 +21,24 @@
 #include <utility>
 #include <vector>
 
+/**
+ * Sliding Discrete Fourier Transform (SDFT).
+ * @tparam T Time domain data type, which can be float, double or long double.
+ * @tparam F Frequency domain data type, which can be float, double (default and recommended) or long double.
+ **/
 template <typename T, typename F = double>
 class SDFT
 {
 
 public:
 
+  /**
+   * Creates a new SDFT plan.
+   * @param dftsize Desired number of DFT bins.
+   * @param latency Synthesis latency factor between 0 and 1.
+   *                The default value 1 corresponds to the highest latency and best possible SNR.
+   *                A smaller value decreases both latency and SNR, but also increases the workload.
+   **/
   SDFT(const size_t dftsize, const double latency = 1) :
     dftsize(dftsize),
     latency(latency)
@@ -55,11 +67,19 @@ public:
     }
   }
 
+  /**
+   * Returns the assigned number of DFT bins.
+   **/
   size_t size() const
   {
     return dftsize;
   }
 
+  /**
+   * Estimates the DFT vector for the given sample.
+   * @param sample Single sample to be analyzed.
+   * @param dft Already allocated DFT vector of shape (dftsize).
+   **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
     // assert(dft.size() == dftsize);
@@ -107,6 +127,12 @@ public:
     }
   }
 
+  /**
+   * Estimates the DFT matrix for the given sample array.
+   * @param nsamples Number of samples to be analyzed.
+   * @param samples Sample array of shape (nsamples).
+   * @param dfts Already allocated DFT matrix of shape (nsamples, dftsize).
+   **/
   void sdft(const size_t nsamples, const T* samples, std::complex<F>* const dfts)
   {
     // assert(samples.size() == dfts.size());
@@ -117,6 +143,12 @@ public:
     }
   }
 
+  /**
+   * Estimates the DFT matrix for the given sample array.
+   * @param nsamples Number of samples to be analyzed.
+   * @param samples Sample array of shape (nsamples).
+   * @param dfts Already allocated array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
+   **/
   void sdft(const size_t nsamples, const T* samples, std::complex<F>** const dfts)
   {
     // assert(samples.size() == dfts.size());
@@ -127,6 +159,10 @@ public:
     }
   }
 
+  /**
+   * Synthesizes a single sample from the given DFT vector.
+   * @param dft DFT vector of shape (dftsize).
+   **/
   T isdft(const std::complex<F>* dft)
   {
     // assert(dft.size() == dftsize);
@@ -151,6 +187,12 @@ public:
     return static_cast<T>(sample);
   }
 
+  /**
+   * Synthesizes the sample array from the given DFT matrix.
+   * @param nsamples Number of samples to be synthesized.
+   * @param dfts DFT matrix of shape (nsamples, dftsize).
+   * @param samples Already allocated sample array of shape (nsamples).
+   **/
   void isdft(const size_t nsamples, const std::complex<F>* dfts, T* const samples)
   {
     // assert(samples.size() == dfts.size());
@@ -161,6 +203,12 @@ public:
     }
   }
 
+  /**
+   * Synthesizes the sample array from the given DFT matrix.
+   * @param nsamples Number of samples to be synthesized.
+   * @param dfts Array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
+   * @param samples Already allocated sample array of shape (nsamples).
+   **/
   void isdft(const size_t nsamples, const std::complex<F>** dfts, T* const samples)
   {
     // assert(samples.size() == dfts.size());

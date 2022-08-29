@@ -12,6 +12,39 @@
  *     http://hdl.handle.net/2027/spo.bbp2372.2005.086
  **/
 
+/**
+ * Use one of following defines to specify the desired
+ * time domain (TD) and frequency domain (FD) data type.
+ *
+ * #define SDFT_TD_FLOAT        // default
+ * #define SDFT_TD_DOUBLE
+ * #define SDFT_TD_LONG_DOUBLE
+ *
+ * #define SDFT_FD_FLOAT
+ * #define SDFT_FD_DOUBLE       // default, recommended
+ * #define SDFT_FD_LONG_DOUBLE
+ *
+ * The specified data type appears as typedef
+ * sdft_td_t, sdft_fd_t and sdft_fdx_t for complex numbers.
+ **/
+
+/**
+ * List of common functions:
+ *
+ * sdft_alloc
+ * sdft_free
+ *
+ * sdft_size
+ *
+ * sdft_sdft
+ * sdft_sdft_n
+ * sdft_sdft_nd
+ *
+ * sdft_isdft
+ * sdft_isdft_n
+ * sdft_isdft_nd
+ **/
+
 #pragma once
 
 #include <assert.h>
@@ -159,6 +192,14 @@ sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const
   return (sdft_fd_t)(0.25) * ((middle + middle) - (left + right)) * weight;
 }
 
+/**
+ * Allocates a new SDFT plan.
+ * @param dftsize Desired number of DFT bins.
+ * @param latency Synthesis latency factor between 0 and 1.
+ *                The default value 1 corresponds to the highest latency and best possible SNR.
+ *                A smaller value decreases both latency and SNR, but also increases the workload.
+ * @return SDFT plan instance.
+ **/
 sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
 {
   sdft_t* sdft = malloc(sizeof(sdft_t));
@@ -204,11 +245,20 @@ sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
   return sdft;
 }
 
+/**
+ * Allocates a new SDFT plan.
+ * @param dftsize Desired number of DFT bins.
+ * @return SDFT plan instance.
+ **/
 sdft_t* sdft_alloc(const size_t dftsize)
 {
   return sdft_alloc_custom(dftsize, 1);
 }
 
+/**
+ * Releases the allocated SDFT plan.
+ * @param sdft SDFT plan instance.
+ **/
 void sdft_free(sdft_t* sdft)
 {
   if (sdft == NULL)
@@ -256,11 +306,21 @@ void sdft_free(sdft_t* sdft)
   sdft = NULL;
 }
 
+/**
+ * Returns the assigned number of DFT bins.
+ * @param sdft SDFT plan instance.
+ **/
 size_t sdft_size(const sdft_t* sdft)
 {
   return (sdft != NULL) ? sdft->dftsize : 0;
 }
 
+/**
+ * Estimates the DFT vector for the given sample.
+ * @param sdft SDFT plan instance.
+ * @param sample Single sample to be analyzed.
+ * @param dft Already allocated DFT vector of shape (dftsize).
+ **/
 void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
   // assert(dft.size() == sdft->dftsize);
@@ -308,6 +368,13 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   }
 }
 
+/**
+ * Estimates the DFT matrix for the given sample array.
+ * @param sdft SDFT plan instance.
+ * @param nsamples Number of samples to be analyzed.
+ * @param samples Sample array of shape (nsamples).
+ * @param dfts Already allocated DFT matrix of shape (nsamples, dftsize).
+ **/
 void sdft_sdft_n(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t* const dfts)
 {
   for (size_t i = 0; i < nsamples; ++i)
@@ -316,6 +383,13 @@ void sdft_sdft_n(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, 
   }
 }
 
+/**
+ * Estimates the DFT matrix for the given sample array.
+ * @param sdft SDFT plan instance.
+ * @param nsamples Number of samples to be analyzed.
+ * @param samples Sample array of shape (nsamples).
+ * @param dfts Already allocated array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
+ **/
 void sdft_sdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t** const dfts)
 {
   for (size_t i = 0; i < nsamples; ++i)
@@ -324,6 +398,11 @@ void sdft_sdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples,
   }
 }
 
+/**
+ * Synthesizes a single sample from the given DFT vector.
+ * @param sdft SDFT plan instance.
+ * @param dft DFT vector of shape (dftsize).
+ **/
 sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 {
   // assert(dft.size() == dftsize);
@@ -348,6 +427,13 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
   return (sdft_td_t)(sample);
 }
 
+/**
+ * Synthesizes the sample array from the given DFT matrix.
+ * @param sdft SDFT plan instance.
+ * @param nsamples Number of samples to be synthesized.
+ * @param dfts DFT matrix of shape (nsamples, dftsize).
+ * @param samples Already allocated sample array of shape (nsamples).
+ **/
 void sdft_isdft_n(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t* dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
@@ -358,6 +444,13 @@ void sdft_isdft_n(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t* dfts, s
   }
 }
 
+/**
+ * Synthesizes the sample array from the given DFT matrix.
+ * @param sdft SDFT plan instance.
+ * @param nsamples Number of samples to be synthesized.
+ * @param dfts Array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
+ * @param samples Already allocated sample array of shape (nsamples).
+ **/
 void sdft_isdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t** dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
