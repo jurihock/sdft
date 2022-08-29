@@ -44,7 +44,7 @@ def writewav(path, data, sr, bits=32):
 
     data = data.clip(-1, +1)
     data = (data * (scaler + 0.5)) - 0.5
-    data += 128 if bits == 8 else 0  # to unsigned 8bit
+    data += 128 if bits == 8 else 0
 
     data = b''.join([
         int(frame).to_bytes(length=bytes, signed=(bits != 8), byteorder=sys.byteorder)

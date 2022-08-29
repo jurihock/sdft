@@ -13,7 +13,6 @@ def main():
 
     dftsize = int(sys.argv[1])
     hopsize = int(sys.argv[2])
-
     srcfile = sys.argv[3]
     wavfile = sys.argv[4]
     dftfile = sys.argv[5]
