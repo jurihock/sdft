@@ -89,7 +89,7 @@ y = sdft.isdft(dft) # synthesize output samples from dft matrix
 
 Feel free to obtain the current version from the PyPI `pip install sdft`.
 
-## Test spectrogram
+## Test spectrogram (test.wav)
 
 | SDFT | STFT |
 | ---- | ---- |
