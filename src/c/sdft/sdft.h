@@ -47,7 +47,6 @@
 
 #pragma once
 
-#include <assert.h>
 #include <complex.h>
 #include <math.h>
 #include <stdlib.h>
@@ -293,8 +292,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
 {
   sdft_t* sdft = malloc(sizeof(sdft_t));
 
-  assert(sdft != NULL);
-
   sdft->dftsize = dftsize;
   sdft->latency = latency;
 
@@ -304,9 +301,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->synthesis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
 
-  assert(sdft->analysis.twiddles != NULL);
-  assert(sdft->synthesis.twiddles != NULL);
-
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
   sdft->analysis.input = calloc(dftsize * 2, sizeof(sdft_td_t));
@@ -314,11 +308,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.accoutput = calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = calloc(dftsize, sizeof(sdft_fdx_t));
-
-  assert(sdft->analysis.input != NULL);
-  assert(sdft->analysis.accoutput != NULL);
-  assert(sdft->analysis.auxoutput != NULL);
-  assert(sdft->analysis.fiddles != NULL);
 
   const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
   const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
