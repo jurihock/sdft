@@ -89,7 +89,13 @@ y = sdft.isdft(dft) # synthesize output samples from dft matrix
 
 Feel free to obtain the current version from the PyPI `pip install sdft`.
 
-## Details
+## Test spectrogram
+
+| SDFT | STFT |
+| ---- | ---- |
+| ![SDFT](test/sdft.png) | ![STFT](test/stft.png) |
+
+## Implementation details
 
 - Both the C and the C++ implementation correspond to figure 4 in [[1]](#1).
 - The Python implementation corresponds to figure 3b in [[1]](#1).
