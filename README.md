@@ -48,7 +48,7 @@ or even better the corresponding generic typedefs:
 * `sdft_td_t`
 * `sdft_fdx_t`
 
-In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` specifications.
+In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` definitions.
 
 ### C++
 
