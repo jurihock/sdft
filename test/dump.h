@@ -16,11 +16,11 @@
 
   #include <stdio.h>
 
-  void dump(const char* path, const sdft_fdx_t* data, const size_t size)
+  void dump(const char* path, const sdft_double_complex_t* data, const size_t size)
   {
     #pragma warning(suppress:4996)
     FILE* file = fopen(path, "wb");
-    fwrite(data, sizeof(sdft_fdx_t), size, file);
+    fwrite(data, sizeof(sdft_double_complex_t), size, file);
     fclose(file);
   }
 

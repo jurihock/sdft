@@ -38,6 +38,18 @@ sdft_isdft_n(sdft, n, dft, y); // synthesize output samples from dft matrix
 sdft_free(sdft); // destroy sdft plan
 ```
 
+Due to incomplete C complex math support in MSVC, optionally use following universal typedefs:
+
+* `sdft_float_t` instead of `float`
+* `sdft_double_complex_t` instead of `double complex`
+
+or even better the corresponding generic typedefs:
+
+* `sdft_td_t`
+* `sdft_fdx_t`
+
+In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` specification.
+
 ### C++
 
 ```c++
