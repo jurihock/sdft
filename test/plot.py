@@ -10,6 +10,13 @@ def figure(name=None):
     return sys.modules[__name__]
 
 
+def tight():
+
+    plotpy.tight_layout()
+
+    return sys.modules[__name__]
+
+
 def show():
 
     plotpy.show()
