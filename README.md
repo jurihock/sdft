@@ -100,6 +100,8 @@ Feel free to obtain the current version from the PyPI `pip install sdft`.
 - The outer SDFT bins "DC" and "Nyquist" are set to zero by default.
 - Hopefully this shouldn't be a huge deal for a causal audio signal.
 
+- Finally the Python implementation is much slower than C/C++.
+
 ## References
 
 1. <span id="1">Krzysztof Duda (2010). Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform. IEEE Signal Processing Magazine. https://ieeexplore.ieee.org/document/5563098</span>
