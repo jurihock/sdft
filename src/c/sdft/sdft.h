@@ -414,7 +414,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
   // assert(dft.size() == sdft->dftsize);
 
-  // NOTE 1
+  // NOTE 1/3
   // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
   // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
 
@@ -433,7 +433,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
   }
 
-  // NOTE 2
+  // NOTE 2/3
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
   // however both outer bins seem to be noisy and will be suppressed anyway after windowing
 
@@ -448,7 +448,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
                              weight);
   }
 
-  // NOTE 3
+  // NOTE 3/3
   // finally suppress outer DFT bins as announced in the comment above
 
   dft[0] = dft[sdft->dftsize - 1] = sdft_etc_complex(0, 0);
