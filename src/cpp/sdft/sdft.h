@@ -98,7 +98,7 @@ public:
 
       analysis.fiddles[i] = newfiddle;
 
-      analysis.accoutput[i] += delta * oldfiddle;
+      analysis.accoutput[i] = analysis.accoutput[i] + delta * oldfiddle;
       analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(newfiddle);
     }
 

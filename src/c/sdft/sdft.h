@@ -141,25 +141,32 @@ struct sdft_plan
 
 typedef struct sdft_plan sdft_t;
 
-sdft_fd_t sdft_etc_acos(const sdft_fd_t a)
+sdft_td_t sdft_etc_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
+{
+  sdft_td_t value = *old_value;
+  *old_value = new_value;
+  return value;
+}
+
+sdft_fd_t sdft_etc_cos(const sdft_fd_t arg)
 {
   #if defined(SDFT_FD_FLOAT)
-    return acosf(a);
+    return cosf(arg);
   #elif defined(SDFT_FD_DOUBLE)
-    return acos(a);
+    return cos(arg);
   #elif defined(SDFT_FD_LONG_DOUBLE)
-    return acosl(a);
+    return cosl(arg);
   #endif
 }
 
-sdft_fd_t sdft_etc_cos(const sdft_fd_t a)
+sdft_fd_t sdft_etc_acos(const sdft_fd_t arg)
 {
   #if defined(SDFT_FD_FLOAT)
-    return cosf(a);
+    return acosf(arg);
   #elif defined(SDFT_FD_DOUBLE)
-    return cos(a);
+    return acos(arg);
   #elif defined(SDFT_FD_LONG_DOUBLE)
-    return cosl(a);
+    return acosl(arg);
   #endif
 }
 
@@ -190,86 +197,6 @@ sdft_fdx_t sdft_etc_complex(const sdft_fd_t r, const sdft_fd_t i)
   return (sdft_fdx_t){ r, i };
 }
 
-sdft_fdx_t sdft_etc_add_cc(const sdft_fdx_t a, const sdft_fdx_t b)
-{
-  #if defined(_MSC_VER)
-    const sdft_fd_t r = sdft_etc_real(a) + sdft_etc_real(b);
-    const sdft_fd_t i = sdft_etc_imag(a) + sdft_etc_imag(b);
-    return sdft_etc_complex(r, i);
-  #else
-    return a + b;
-  #endif
-}
-
-sdft_fdx_t sdft_etc_sub_cc(const sdft_fdx_t a, const sdft_fdx_t b)
-{
-  #if defined(_MSC_VER)
-    const sdft_fd_t r = sdft_etc_real(a) - sdft_etc_real(b);
-    const sdft_fd_t i = sdft_etc_imag(a) - sdft_etc_imag(b);
-    return sdft_etc_complex(r, i);
-  #else
-    return a + b;
-  #endif
-}
-
-sdft_fdx_t sdft_etc_mul_cc(const sdft_fdx_t a, const sdft_fdx_t b)
-{
-  #if defined(_MSC_VER)
-    #if defined(SDFT_FD_FLOAT)
-      return _FCmulcc(a, b);
-    #elif defined(SDFT_FD_DOUBLE)
-      return _Cmulcc(a, b);
-    #elif defined(SDFT_FD_LONG_DOUBLE)
-      return _LCmulcc(a, b);
-    #endif
-  #else
-    return a * b;
-  #endif
-}
-
-sdft_fdx_t sdft_etc_mul_cr(const sdft_fdx_t a, const sdft_fd_t b)
-{
-  #if defined(_MSC_VER)
-    #if defined(SDFT_FD_FLOAT)
-      return _FCmulcr(a, b);
-    #elif defined(SDFT_FD_DOUBLE)
-      return _Cmulcr(a, b);
-    #elif defined(SDFT_FD_LONG_DOUBLE)
-      return _LCmulcr(a, b);
-    #endif
-  #else
-    return a * b;
-  #endif
-}
-
-sdft_fdx_t sdft_etc_mul_rc(const sdft_fd_t a, const sdft_fdx_t b)
-{
-  #if defined(_MSC_VER)
-    #if defined(SDFT_FD_FLOAT)
-      return _FCmulcr(b, a);
-    #elif defined(SDFT_FD_DOUBLE)
-      return _Cmulcr(b, a);
-    #elif defined(SDFT_FD_LONG_DOUBLE)
-      return _LCmulcr(b, a);
-    #endif
-  #else
-    return a * b;
-  #endif
-}
-
-sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t a)
-{
-  const sdft_fdx_t i = sdft_etc_complex(0, 1);
-
-  #if defined(SDFT_FD_FLOAT)
-    return sdft_etc_mul_rc(r, cexpf(sdft_etc_mul_cr(i, a)));
-  #elif defined(SDFT_FD_DOUBLE)
-    return sdft_etc_mul_rc(r, cexp(sdft_etc_mul_cr(i, a)));
-  #elif defined(SDFT_FD_LONG_DOUBLE)
-    return sdft_etc_mul_rc(r, cexpl(sdft_etc_mul_cr(i, a)));
-  #endif
-}
-
 sdft_fdx_t sdft_etc_conj(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
@@ -281,19 +208,77 @@ sdft_fdx_t sdft_etc_conj(const sdft_fdx_t z)
   #endif
 }
 
-sdft_td_t sdft_etc_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
+sdft_fdx_t sdft_etc_add(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  sdft_td_t value = *old_value;
-  *old_value = new_value;
-  return value;
+  #if defined(_MSC_VER)
+    return sdft_etc_complex(
+      sdft_etc_real(x) + sdft_etc_real(y),
+      sdft_etc_imag(x) + sdft_etc_imag(y));
+  #else
+    return x + y;
+  #endif
 }
 
-sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t  weight)
+sdft_fdx_t sdft_etc_sub(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  const sdft_fdx_t x = sdft_etc_add_cc(middle, middle);
-  const sdft_fdx_t y = sdft_etc_add_cc(left, right);
-  const sdft_fdx_t z = sdft_etc_sub_cc(x, y);
-  return sdft_etc_mul_cr(z, (sdft_fd_t)(0.25) * weight);
+  #if defined(_MSC_VER)
+    return sdft_etc_complex(
+      sdft_etc_real(x) - sdft_etc_real(y),
+      sdft_etc_imag(x) - sdft_etc_imag(y));
+  #else
+    return x - y;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
+{
+  #if defined(_MSC_VER)
+    #if defined(SDFT_FD_FLOAT)
+      return _FCmulcc(x, y);
+    #elif defined(SDFT_FD_DOUBLE)
+      return _Cmulcc(x, y);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return _LCmulcc(x, y);
+    #endif
+  #else
+    return x * y;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_mul_real(const sdft_fd_t x, const sdft_fdx_t y)
+{
+  #if defined(_MSC_VER)
+    #if defined(SDFT_FD_FLOAT)
+      return _FCmulcr(y, x);
+    #elif defined(SDFT_FD_DOUBLE)
+      return _Cmulcr(y, x);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return _LCmulcr(y, x);
+    #endif
+  #else
+    return y * x;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t t)
+{
+  const sdft_fdx_t i = sdft_etc_complex(0, 1);
+
+  #if defined(SDFT_FD_FLOAT)
+    return sdft_etc_mul_real(r, cexpf(sdft_etc_mul_real(t, i)));
+  #elif defined(SDFT_FD_DOUBLE)
+    return sdft_etc_mul_real(r, cexp(sdft_etc_mul_real(t, i)));
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return sdft_etc_mul_real(r, cexpl(sdft_etc_mul_real(t, i)));
+  #endif
+}
+
+sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t weight)
+{
+  const sdft_fdx_t x = sdft_etc_add(middle, middle);
+  const sdft_fdx_t y = sdft_etc_add(left, right);
+  const sdft_fdx_t z = sdft_etc_sub(x, y);
+  return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, z);
 }
 
 /**
@@ -439,12 +424,12 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
     const sdft_fdx_t oldfiddle = sdft->analysis.fiddles[i];
-    const sdft_fdx_t newfiddle = sdft_etc_mul_cc(oldfiddle, sdft->analysis.twiddles[i]);
+    const sdft_fdx_t newfiddle = sdft_etc_mul(oldfiddle, sdft->analysis.twiddles[i]);
 
     sdft->analysis.fiddles[i] = newfiddle;
 
-    sdft->analysis.accoutput[i] = sdft_etc_add_cc(sdft->analysis.accoutput[i], sdft_etc_mul_rc(delta, oldfiddle));
-    sdft->analysis.auxoutput[j] = sdft_etc_mul_cc(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
+    sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, oldfiddle));
+    sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
   }
 
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
@@ -524,7 +509,7 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
   {
     for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += sdft_etc_real(sdft_etc_mul_cc(dft[i], sdft->synthesis.twiddles[i]));
+      sample += sdft_etc_real(sdft_etc_mul(dft[i], sdft->synthesis.twiddles[i]));
     }
   }
 
