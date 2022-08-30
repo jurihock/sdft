@@ -48,7 +48,7 @@ or even better the corresponding generic typedefs:
 * `sdft_td_t`
 * `sdft_fdx_t`
 
-In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` specification.
+In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` definitions.
 
 ### C++
 
@@ -63,11 +63,13 @@ float* y = ...; // synthesis samples of shape (n)
 
 std::complex<double>* dft = ...; // dft matrix of shape (n, m)
 
-SDFT<float, double> sdft(m); // create sdft plan with time/frequency domain data type
+SDFT<float> sdft(m); // create sdft plan with time/frequency domain data type
 
 sdft.sdft(n, x, dft); // extract dft matrix from input samples
 sdft.isdft(n, dft, y); // synthesize output samples from dft matrix
 ```
+
+Optionally specify a different frequency domain data type like so `SDFT<float, double>`.
 
 ### Python
 
