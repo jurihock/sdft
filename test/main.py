@@ -3,6 +3,7 @@ import os
 import sys
 
 from plot import spectrogram, figure, show
+from stft import stft
 from wav import readwav
 
 
@@ -41,6 +42,8 @@ def main():
         for key, val in dftfiles.items()
     }
 
+    ref = stft(x, dftsize * 2, hopsize)
+
     # check wavs
 
     shapes = list(set([_.shape for _ in y.values()]))
@@ -59,6 +62,7 @@ def main():
 
     # plot spectrograms
 
+    figure('stft').spectrogram(ref, sr, hopsize, ylim=(500, 15e3), yscale='log')
     figure('c').spectrogram(dfts['c'], sr, hopsize, ylim=(500, 15e3), yscale='log')
     figure('py').spectrogram(dfts['py'], sr, hopsize, ylim=(500, 15e3), yscale='log')
     show()
