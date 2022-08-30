@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
   size = (size / hopsize) * hopsize;
 
   float* output = malloc(size * sizeof(float));
-  double complex* buffer = malloc(hopsize * dftsize * sizeof(double complex));
-  double complex* dfts = malloc((size / hopsize) * dftsize * sizeof(double complex));
+  sdft_fdx_t* buffer = malloc(hopsize * dftsize * sizeof(sdft_fdx_t));
+  sdft_fdx_t* dfts = malloc((size / hopsize) * dftsize * sizeof(sdft_fdx_t));
 
   int progress = 0;
 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     sdft_sdft_n(sdft, hopsize, input + i, buffer);
     sdft_isdft_n(sdft, hopsize, buffer, output + i);
 
-    memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(double complex));
+    memcpy(dfts + j * dftsize, buffer, dftsize * sizeof(sdft_fdx_t));
   }
 
   writewav(wavfile, output, size, sr);

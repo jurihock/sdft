@@ -15,10 +15,10 @@
 
   #include <stdio.h>
 
-  void dump(const char* path, const double complex* data, const size_t size)
+  void dump(const char* path, const sdft_fdx_t* data, const size_t size)
   {
     FILE* file = fopen(path, "wb");
-    fwrite(data, sizeof(double complex), size, file);
+    fwrite(data, sizeof(sdft_fdx_t), size, file);
     fclose(file);
   }
 

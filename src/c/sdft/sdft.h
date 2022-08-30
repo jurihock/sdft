@@ -56,36 +56,52 @@
 extern "C" {
 #endif
 
+typedef size_t sdft_size_t;
+
+typedef float sdft_float_t;
+typedef double sdft_double_t;
+typedef long double sdft_long_double_t;
+
+#if defined(_MSC_VER)
+  typedef _Fcomplex sdft_float_complex_t;
+  typedef _Dcomplex sdft_double_complex_t;
+  typedef _Lcomplex sdft_long_double_complex_t;
+#else
+  typedef float complex sdft_float_complex_t;
+  typedef double complex sdft_double_complex_t;
+  typedef long double complex sdft_long_double_complex_t;
+#endif
+
 #if defined(SDFT_TD_FLOAT)
-  typedef float sdft_td_t;
+  typedef sdft_float_t sdft_td_t;
 #elif defined(SDFT_TD_DOUBLE)
-  typedef double sdft_td_t;
+  typedef sdft_double_t sdft_td_t;
 #elif defined(SDFT_TD_LONG_DOUBLE)
-  typedef long double sdft_td_t;
+  typedef sdft_long_double_t sdft_td_t;
 #else
   #define SDFT_TD_FLOAT
-  typedef float sdft_td_t;
+  typedef sdft_float_t sdft_td_t;
 #endif
 
 #if defined(SDFT_FD_FLOAT)
-  typedef float sdft_fd_t;
-  typedef float complex sdft_fdx_t;
+  typedef sdft_float_t sdft_fd_t;
+  typedef sdft_float_complex_t sdft_fdx_t;
 #elif defined(SDFT_FD_DOUBLE)
-  typedef double sdft_fd_t;
-  typedef double complex sdft_fdx_t;
+  typedef sdft_double_t sdft_fd_t;
+  typedef sdft_double_complex_t sdft_fdx_t;
 #elif defined(SDFT_FD_LONG_DOUBLE)
-  typedef long double sdft_fd_t;
-  typedef long double complex sdft_fdx_t;
+  typedef sdft_long_double_t sdft_fd_t;
+  typedef sdft_long_double_complex_t sdft_fdx_t;
 #else
   #define SDFT_FD_DOUBLE
-  typedef double sdft_fd_t;
-  typedef double complex sdft_fdx_t;
+  typedef sdft_double_t sdft_fd_t;
+  typedef sdft_double_complex_t sdft_fdx_t;
 #endif
 
 struct sdft_plan_roi
 {
-  size_t first;
-  size_t second;
+  sdft_size_t first;
+  sdft_size_t second;
 };
 
 typedef struct sdft_plan_roi sdft_roi_t;
@@ -95,8 +111,8 @@ struct sdft_plan_analysis
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
 
-  size_t cursor;
-  size_t maxcursor;
+  sdft_size_t cursor;
+  sdft_size_t maxcursor;
   sdft_td_t* input;
 
   sdft_fdx_t* accoutput;
@@ -116,8 +132,8 @@ typedef struct sdft_plan_synthesis sdft_synthesis_t;
 
 struct sdft_plan
 {
-  size_t dftsize;
-  double latency;
+  sdft_size_t dftsize;
+  sdft_double_t latency;
 
   sdft_analysis_t analysis;
   sdft_synthesis_t synthesis;
@@ -158,14 +174,99 @@ sdft_fd_t sdft_etc_real(const sdft_fdx_t z)
   #endif
 }
 
-sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t a)
+sdft_fd_t sdft_etc_imag(const sdft_fdx_t z)
 {
   #if defined(SDFT_FD_FLOAT)
-    return r * cexpf(I * a);
+    return cimagf(z);
   #elif defined(SDFT_FD_DOUBLE)
-    return r * cexp(I * a);
+    return cimag(z);
   #elif defined(SDFT_FD_LONG_DOUBLE)
-    return r * cexpl(I * a);
+    return cimagl(z);
+  #endif
+}
+
+sdft_fdx_t sdft_etc_complex(const sdft_fd_t r, const sdft_fd_t i)
+{
+  return (sdft_fdx_t){ r, i };
+}
+
+sdft_fdx_t sdft_etc_add_cc(const sdft_fdx_t a, const sdft_fdx_t b)
+{
+  #if defined(_MSC_VER)
+    const sdft_fd_t r = sdft_etc_real(a) + sdft_etc_real(b);
+    const sdft_fd_t i = sdft_etc_imag(a) + sdft_etc_imag(b);
+    return sdft_etc_complex(r, i);
+  #else
+    return a + b;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_sub_cc(const sdft_fdx_t a, const sdft_fdx_t b)
+{
+  #if defined(_MSC_VER)
+    const sdft_fd_t r = sdft_etc_real(a) - sdft_etc_real(b);
+    const sdft_fd_t i = sdft_etc_imag(a) - sdft_etc_imag(b);
+    return sdft_etc_complex(r, i);
+  #else
+    return a + b;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_mul_cc(const sdft_fdx_t a, const sdft_fdx_t b)
+{
+  #if defined(_MSC_VER)
+    #if defined(SDFT_FD_FLOAT)
+      return _FCmulcc(a, b);
+    #elif defined(SDFT_FD_DOUBLE)
+      return _Cmulcc(a, b);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return _LCmulcc(a, b);
+    #endif
+  #else
+    return a * b;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_mul_cr(const sdft_fdx_t a, const sdft_fd_t b)
+{
+  #if defined(_MSC_VER)
+    #if defined(SDFT_FD_FLOAT)
+      return _FCmulcr(a, b);
+    #elif defined(SDFT_FD_DOUBLE)
+      return _Cmulcr(a, b);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return _LCmulcr(a, b);
+    #endif
+  #else
+    return a * b;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_mul_rc(const sdft_fd_t a, const sdft_fdx_t b)
+{
+  #if defined(_MSC_VER)
+    #if defined(SDFT_FD_FLOAT)
+      return _FCmulcr(b, a);
+    #elif defined(SDFT_FD_DOUBLE)
+      return _Cmulcr(b, a);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return _LCmulcr(b, a);
+    #endif
+  #else
+    return a * b;
+  #endif
+}
+
+sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t a)
+{
+  const sdft_fdx_t i = sdft_etc_complex(0, 1);
+
+  #if defined(SDFT_FD_FLOAT)
+    return sdft_etc_mul_rc(r, cexpf(sdft_etc_mul_cr(i, a)));
+  #elif defined(SDFT_FD_DOUBLE)
+    return sdft_etc_mul_rc(r, cexp(sdft_etc_mul_cr(i, a)));
+  #elif defined(SDFT_FD_LONG_DOUBLE)
+    return sdft_etc_mul_rc(r, cexpl(sdft_etc_mul_cr(i, a)));
   #endif
 }
 
@@ -189,7 +290,10 @@ sdft_td_t sdft_etc_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
 
 sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t  weight)
 {
-  return (sdft_fd_t)(0.25) * ((middle + middle) - (left + right)) * weight;
+  const sdft_fdx_t x = sdft_etc_add_cc(middle, middle);
+  const sdft_fdx_t y = sdft_etc_add_cc(left, right);
+  const sdft_fdx_t z = sdft_etc_sub_cc(x, y);
+  return sdft_etc_mul_cr(z, (sdft_fd_t)(0.25) * weight);
 }
 
 /**
@@ -200,7 +304,7 @@ sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const
  *                A smaller value decreases both latency and SNR, but also increases the workload.
  * @return SDFT plan instance.
  **/
-sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
+sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency)
 {
   sdft_t* sdft = malloc(sizeof(sdft_t));
 
@@ -234,12 +338,12 @@ sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
   const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
   const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
 
-  for (size_t i = 0; i < dftsize; ++i)
+  for (sdft_size_t i = 0; i < dftsize; ++i)
   {
     sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), pi * i);
     sdft->synthesis.twiddles[i] = sdft_etc_polar(weight, pi * i * dftsize * latency);
 
-    sdft->analysis.fiddles[i] = (sdft_fd_t)(1);
+    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
   }
 
   return sdft;
@@ -250,7 +354,7 @@ sdft_t* sdft_alloc_custom(const size_t dftsize, const double latency)
  * @param dftsize Desired number of DFT bins.
  * @return SDFT plan instance.
  **/
-sdft_t* sdft_alloc(const size_t dftsize)
+sdft_t* sdft_alloc(const sdft_size_t dftsize)
 {
   return sdft_alloc_custom(dftsize, 1);
 }
@@ -310,7 +414,7 @@ void sdft_free(sdft_t* sdft)
  * Returns the assigned number of DFT bins.
  * @param sdft SDFT plan instance.
  **/
-size_t sdft_size(const sdft_t* sdft)
+sdft_size_t sdft_size(const sdft_t* sdft)
 {
   return (sdft != NULL) ? sdft->dftsize : 0;
 }
@@ -332,15 +436,15 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
   const sdft_fd_t delta = sample - sdft_etc_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
 
-  for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
     const sdft_fdx_t oldfiddle = sdft->analysis.fiddles[i];
-    const sdft_fdx_t newfiddle = oldfiddle * sdft->analysis.twiddles[i];
+    const sdft_fdx_t newfiddle = sdft_etc_mul_cc(oldfiddle, sdft->analysis.twiddles[i]);
 
     sdft->analysis.fiddles[i] = newfiddle;
 
-    sdft->analysis.accoutput[i] += delta * oldfiddle;
-    sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i] * sdft_etc_conj(newfiddle);
+    sdft->analysis.accoutput[i] = sdft_etc_add_cc(sdft->analysis.accoutput[i], sdft_etc_mul_rc(delta, oldfiddle));
+    sdft->analysis.auxoutput[j] = sdft_etc_mul_cc(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
   }
 
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
@@ -350,7 +454,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   // analysis.auxoutput[0] = analysis.auxoutput[sdft->dftsize];
   // analysis.auxoutput[sdft->dftsize + 1] = analysis.auxoutput[1];
 
-  for (size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
     dft[i] = sdft_etc_window(sdft->analysis.auxoutput[j - 1],
                              sdft->analysis.auxoutput[j],
@@ -360,7 +464,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
   // finally suppress outer DFT bins as announced in the comment above
 
-  dft[0] = dft[sdft->dftsize - 1] = 0;
+  dft[0] = dft[sdft->dftsize - 1] = sdft_etc_complex(0, 0);
 
   if (++sdft->analysis.cursor > sdft->analysis.maxcursor)
   {
@@ -375,9 +479,9 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
  * @param samples Sample array of shape (nsamples).
  * @param dfts Already allocated DFT matrix of shape (nsamples, dftsize).
  **/
-void sdft_sdft_n(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t* const dfts)
+void sdft_sdft_n(sdft_t* sdft, const sdft_size_t nsamples, const sdft_td_t* samples, sdft_fdx_t* const dfts)
 {
-  for (size_t i = 0; i < nsamples; ++i)
+  for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     sdft_sdft(sdft, samples[i], &dfts[i * sdft->dftsize]);
   }
@@ -390,9 +494,9 @@ void sdft_sdft_n(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, 
  * @param samples Sample array of shape (nsamples).
  * @param dfts Already allocated array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
  **/
-void sdft_sdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_td_t* samples, sdft_fdx_t** const dfts)
+void sdft_sdft_nd(sdft_t* sdft, const sdft_size_t nsamples, const sdft_td_t* samples, sdft_fdx_t** const dfts)
 {
-  for (size_t i = 0; i < nsamples; ++i)
+  for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     sdft_sdft(sdft, samples[i], dfts[i]);
   }
@@ -411,16 +515,16 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 
   if (sdft->latency == 1)
   {
-    for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
       sample += sdft_etc_real(dft[i]) * (i % 2 ? -1 : +1);
     }
   }
   else
   {
-    for (size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {
-      sample += sdft_etc_real(dft[i] * sdft->synthesis.twiddles[i]);
+      sample += sdft_etc_real(sdft_etc_mul_cc(dft[i], sdft->synthesis.twiddles[i]));
     }
   }
 
@@ -434,11 +538,11 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
  * @param dfts DFT matrix of shape (nsamples, dftsize).
  * @param samples Already allocated sample array of shape (nsamples).
  **/
-void sdft_isdft_n(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t* dfts, sdft_td_t* const samples)
+void sdft_isdft_n(sdft_t* sdft, const sdft_size_t nsamples, const sdft_fdx_t* dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
 
-  for (size_t i = 0; i < nsamples; ++i)
+  for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     samples[i] = sdft_isdft(sdft, &dfts[i * sdft->dftsize]);
   }
@@ -451,11 +555,11 @@ void sdft_isdft_n(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t* dfts, s
  * @param dfts Array of DFT vectors of shape (nsamples) and (dftsize) correspondingly.
  * @param samples Already allocated sample array of shape (nsamples).
  **/
-void sdft_isdft_nd(sdft_t* sdft, const size_t nsamples, const sdft_fdx_t** dfts, sdft_td_t* const samples)
+void sdft_isdft_nd(sdft_t* sdft, const sdft_size_t nsamples, const sdft_fdx_t** dfts, sdft_td_t* const samples)
 {
   // assert(samples.size() == dfts.size());
 
-  for (size_t i = 0; i < nsamples; ++i)
+  for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     samples[i] = sdft_isdft(sdft, dfts[i]);
   }
