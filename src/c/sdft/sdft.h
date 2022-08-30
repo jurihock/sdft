@@ -412,8 +412,6 @@ sdft_size_t sdft_size(const sdft_t* sdft)
  **/
 void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
-  // assert(dft.size() == sdft->dftsize);
-
   // NOTE 1/3
   // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
   // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
@@ -496,8 +494,6 @@ void sdft_sdft_nd(sdft_t* sdft, const sdft_size_t nsamples, const sdft_td_t* sam
  **/
 sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 {
-  // assert(dft.size() == dftsize);
-
   sdft_fd_t sample = (sdft_fd_t)(0);
 
   if (sdft->latency == 1)
@@ -527,8 +523,6 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
  **/
 void sdft_isdft_n(sdft_t* sdft, const sdft_size_t nsamples, const sdft_fdx_t* dfts, sdft_td_t* const samples)
 {
-  // assert(samples.size() == dfts.size());
-
   for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     samples[i] = sdft_isdft(sdft, &dfts[i * sdft->dftsize]);
@@ -544,8 +538,6 @@ void sdft_isdft_n(sdft_t* sdft, const sdft_size_t nsamples, const sdft_fdx_t* df
  **/
 void sdft_isdft_nd(sdft_t* sdft, const sdft_size_t nsamples, const sdft_fdx_t** dfts, sdft_td_t* const samples)
 {
-  // assert(samples.size() == dfts.size());
-
   for (sdft_size_t i = 0; i < nsamples; ++i)
   {
     samples[i] = sdft_isdft(sdft, dfts[i]);

@@ -14,7 +14,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdlib>
@@ -82,8 +81,6 @@ public:
    **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
-    // assert(dft.size() == dftsize);
-
     // NOTE 1/3
     // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
     // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
@@ -137,8 +134,6 @@ public:
    **/
   void sdft(const size_t nsamples, const T* samples, std::complex<F>* const dfts)
   {
-    // assert(samples.size() == dfts.size());
-
     for (size_t i = 0; i < nsamples; ++i)
     {
       sdft(samples[i], &dfts[i * dftsize]);
@@ -153,8 +148,6 @@ public:
    **/
   void sdft(const size_t nsamples, const T* samples, std::complex<F>** const dfts)
   {
-    // assert(samples.size() == dfts.size());
-
     for (size_t i = 0; i < nsamples; ++i)
     {
       sdft(samples[i], dfts[i]);
@@ -167,8 +160,6 @@ public:
    **/
   T isdft(const std::complex<F>* dft)
   {
-    // assert(dft.size() == dftsize);
-
     F sample = F(0);
 
     if (latency == 1)
@@ -197,8 +188,6 @@ public:
    **/
   void isdft(const size_t nsamples, const std::complex<F>* dfts, T* const samples)
   {
-    // assert(samples.size() == dfts.size());
-
     for (size_t i = 0; i < nsamples; ++i)
     {
       samples[i] = isdft(&dfts[i * dftsize]);
@@ -213,8 +202,6 @@ public:
    **/
   void isdft(const size_t nsamples, const std::complex<F>** dfts, T* const samples)
   {
-    // assert(samples.size() == dfts.size());
-
     for (size_t i = 0; i < nsamples; ++i)
     {
       samples[i] = isdft(dfts[i]);
