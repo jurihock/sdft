@@ -87,6 +87,8 @@ dft = sdft.sdft(x) # extract dft matrix from input samples
 y = sdft.isdft(dft) # synthesize output samples from dft matrix
 ```
 
+Feel free to obtain the current version from the PyPI `pip install sdft`.
+
 ## References
 
 1. <span id="1">Krzysztof Duda (2010). Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform. IEEE Signal Processing Magazine. https://ieeexplore.ieee.org/document/5563098</span>
