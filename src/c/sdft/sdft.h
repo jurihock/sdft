@@ -414,8 +414,9 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
   // assert(dft.size() == sdft->dftsize);
 
+  // NOTE 1
   // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
-  // but then requires a correction by factor 2 in synthesis and is therefore omitted
+  // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
 
   const sdft_fd_t weight = (sdft_fd_t)(1) / sdft->dftsize;
 
@@ -432,12 +433,12 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
   }
 
+  // NOTE 2
   // theoretically the DFT periodicity needs to be preserved for proper windowing,
-  // but the both outer bins seem to be noisy for an unclear reason
-  // and will be suppressed anyway after windowing
+  // however both outer bins seem to be noisy and will be suppressed anyway after windowing
 
-  // analysis.auxoutput[0] = analysis.auxoutput[sdft->dftsize];
-  // analysis.auxoutput[sdft->dftsize + 1] = analysis.auxoutput[1];
+  // sdft->analysis.auxoutput[0] = sdft->analysis.auxoutput[sdft->dftsize];
+  // sdft->analysis.auxoutput[sdft->dftsize + 1] = sdft->analysis.auxoutput[1];
 
   for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
@@ -447,6 +448,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
                              weight);
   }
 
+  // NOTE 3
   // finally suppress outer DFT bins as announced in the comment above
 
   dft[0] = dft[sdft->dftsize - 1] = sdft_etc_complex(0, 0);

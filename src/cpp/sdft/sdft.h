@@ -84,8 +84,9 @@ public:
   {
     // assert(dft.size() == dftsize);
 
+    // NOTE 1
     // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
-    // but then requires a correction by factor 2 in synthesis and is therefore omitted
+    // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
 
     const F weight = F(1) / dftsize;
 
@@ -102,9 +103,9 @@ public:
       analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(newfiddle);
     }
 
+    // NOTE 2
     // theoretically the DFT periodicity needs to be preserved for proper windowing,
-    // but the both outer bins seem to be noisy for an unclear reason
-    // and will be suppressed anyway after windowing
+    // however both outer bins seem to be noisy and will be suppressed anyway after windowing
 
     // analysis.auxoutput[0] = analysis.auxoutput[dftsize];
     // analysis.auxoutput[dftsize + 1] = analysis.auxoutput[1];
@@ -117,6 +118,7 @@ public:
                       weight);
     }
 
+    // NOTE 3
     // finally suppress outer DFT bins as announced in the comment above
 
     dft[0] = dft[dftsize - 1] = 0;
