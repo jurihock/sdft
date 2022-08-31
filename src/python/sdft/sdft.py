@@ -72,16 +72,15 @@ class SDFT:
         twiddles = numpy.exp(-2j * numpy.pi * m * n / (N * 2))
 
         delayline = numpy.concatenate((self.delayline, samples))
-        deltas = samples - delayline[:M]
         numpy.copyto(self.delayline, delayline[-(N * 2):])
-
-        data = deltas[:, None] * twiddles[:-1]
+        data = samples - delayline[:M]
+        data = data[:, None] * twiddles[:-1]
 
         data[0] += self.accumulator
         numpy.add.accumulate(data, axis=0, out=data)
         numpy.copyto(self.accumulator, data[-1])
-
         data *= numpy.conj(twiddles[1:])
+
         dfts = self.window(data)
 
         return dfts

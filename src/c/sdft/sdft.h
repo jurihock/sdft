@@ -411,13 +411,9 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
   for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
   {
-    const sdft_fdx_t oldfiddle = sdft->analysis.fiddles[i];
-    const sdft_fdx_t newfiddle = sdft_etc_mul(oldfiddle, sdft->analysis.twiddles[i]);
-
-    sdft->analysis.fiddles[i] = newfiddle;
-
-    sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, oldfiddle));
-    sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(newfiddle));
+    sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
+    sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
+    sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
   }
 
   // NOTE 2/3

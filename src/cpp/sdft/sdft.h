@@ -91,13 +91,9 @@ public:
 
     for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
     {
-      const std::complex<F> oldfiddle = analysis.fiddles[i];
-      const std::complex<F> newfiddle = oldfiddle * analysis.twiddles[i];
-
-      analysis.fiddles[i] = newfiddle;
-
-      analysis.accoutput[i] = analysis.accoutput[i] + delta * oldfiddle;
-      analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(newfiddle);
+      analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
+      analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
+      analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
     }
 
     // NOTE 2/3
