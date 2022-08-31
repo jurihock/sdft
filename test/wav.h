@@ -23,13 +23,13 @@ void freewav(float* data)
   #endif
 }
 
-drwav_uint64 drwav_write_pcm_frames_f32_to_s32(drwav* wav, const drwav_uint64 samples, const float* data)
+size_t drwav_write_pcm_frames_f32_to_s32(drwav* wav, const size_t samples, const float* data)
 {
-  drwav_uint64 size = samples * wav->channels;
+  size_t size = samples * wav->channels;
   drwav_int32* data_int32 = (drwav_int32*)malloc(size * sizeof(drwav_int32));
 
   drwav_f32_to_s32(data_int32, data, size);
-  size = drwav_write_pcm_frames(wav, samples, data_int32);
+  size = (size_t)drwav_write_pcm_frames(wav, samples, data_int32);
 
   free(data_int32);
   return size;
@@ -48,16 +48,9 @@ bool readwav(const char* path, float** data, size_t* size, size_t* samplerate)
     return false;
   }
 
-  const size_t samples = wav.totalPCMFrameCount;
-  const size_t channels = wav.channels;
+  const size_t samples = (size_t)wav.totalPCMFrameCount;
+  const size_t channels = (size_t)wav.channels;
   const size_t bytes = samples * channels * sizeof(float);
-
-  if (bytes > DRWAV_SIZE_MAX)
-  {
-    drwav_uninit(&wav);
-
-    return false;
-  }
 
   (*data) = allocwav(samples * channels);
   (*size) = samples * channels;
@@ -104,18 +97,13 @@ bool writewav(const char* path, const float* data, const size_t size, const size
   const size_t channels = 1;
   const size_t bytes = samples * channels * sizeof(drwav_int32);
 
-  if (bytes > DRWAV_SIZE_MAX)
-  {
-    return false;
-  }
-
   drwav wav;
   drwav_data_format format;
 
   format.container = drwav_container_riff;
   format.format = DR_WAVE_FORMAT_PCM;
   format.bitsPerSample = sizeof(drwav_uint32) * 8;
-  format.channels = (drwav_uint16)channels;
+  format.channels = (drwav_uint32)channels;
   format.sampleRate = (drwav_uint32)samplerate;
 
   if (drwav_init_file_write(&wav, path, &format, NULL) != DRWAV_TRUE)
