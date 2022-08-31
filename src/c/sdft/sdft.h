@@ -140,10 +140,10 @@ struct sdft_plan
 
 typedef struct sdft_plan sdft_t;
 
-sdft_td_t sdft_etc_exchange(sdft_td_t* old_value, const sdft_td_t new_value)
+sdft_td_t sdft_etc_exchange(sdft_td_t* oldvalue, const sdft_td_t newvalue)
 {
-  sdft_td_t value = *old_value;
-  *old_value = new_value;
+  const sdft_td_t value = *oldvalue;
+  *oldvalue = newvalue;
   return value;
 }
 

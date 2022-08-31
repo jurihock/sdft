@@ -231,10 +231,10 @@ private:
   }
   synthesis;
 
-  inline static T exchange(T& old_value, const T new_value)
+  inline static T exchange(T& oldvalue, const T newvalue)
   {
-    T value = old_value;
-    old_value = new_value;
+    const T value = oldvalue;
+    oldvalue = newvalue;
     return value;
   }
 
