@@ -67,6 +67,18 @@ public:
   }
 
   /**
+   * Resets this SDFT plan instance to its initial state.
+   **/
+  void reset()
+  {
+    analysis.cursor = 0;
+    std::fill(analysis.input.begin(), analysis.input.end(), 0);
+    std::fill(analysis.accoutput.begin(), analysis.accoutput.end(), 0);
+    std::fill(analysis.auxoutput.begin(), analysis.auxoutput.end(), 0);
+    std::fill(analysis.fiddles.begin(), analysis.fiddles.end(), 1);
+  }
+
+  /**
    * Returns the assigned number of DFT bins.
    **/
   size_t size() const

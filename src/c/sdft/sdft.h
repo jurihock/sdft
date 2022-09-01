@@ -50,6 +50,7 @@
 #include <complex.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -309,6 +310,11 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = calloc(dftsize, sizeof(sdft_fdx_t));
 
+  for (sdft_size_t i = 0; i < dftsize; ++i)
+  {
+    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
+  }
+
   const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
   const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
 
@@ -316,8 +322,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   {
     sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), pi * i);
     sdft->synthesis.twiddles[i] = sdft_etc_polar(weight, pi * i * dftsize * latency);
-
-    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
   }
 
   return sdft;
@@ -382,6 +386,24 @@ void sdft_free(sdft_t* sdft)
 
   free(sdft);
   sdft = NULL;
+}
+
+/**
+ * Resets the specified SDFT plan instance to its initial state.
+ * @param sdft SDFT plan instance.
+ **/
+void sdft_reset(sdft_t* sdft)
+{
+  sdft->analysis.cursor = 0;
+
+  memset(sdft->analysis.input, 0, (sdft->dftsize * 2) * sizeof(sdft_td_t));
+  memset(sdft->analysis.accoutput, 0, (sdft->dftsize) * sizeof(sdft_fdx_t));
+  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + 2) * sizeof(sdft_fdx_t));
+
+  for (sdft_size_t i = 0; i < sdft->dftsize; ++i)
+  {
+    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
+  }
 }
 
 /**

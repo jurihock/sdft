@@ -42,6 +42,22 @@ class SDFT:
         self.delayline = numpy.zeros(dftsize * 2, float)
         self.accumulator = numpy.zeros(dftsize, complex)
 
+    def reset(self):
+        """
+        Reset this SDFT plan to its initial state.
+        """
+
+        self.offset = 0
+        self.delayline.fill(0)
+        self.accumulator.fill(0)
+
+    def size(self):
+        """
+        Get the assigned number of DFT bins.
+        """
+
+        return self.dftsize
+
     def sdft(self, samples):
         """
         Estimate the DFT matrix for the given sample array.
@@ -118,7 +134,7 @@ class SDFT:
 
     def window(self, x):
         """
-        Applies Hann window to the specified DFT matrix.
+        Apply Hann window to the specified DFT matrix.
         """
 
         x = numpy.atleast_2d(x)
