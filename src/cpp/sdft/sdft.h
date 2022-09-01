@@ -93,7 +93,7 @@ public:
    **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
-    // NOTE 1/3
+    // NOTE
     // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
     // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
 
@@ -108,12 +108,8 @@ public:
       analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
     }
 
-    // NOTE 2/3
-    // theoretically the DFT periodicity needs to be preserved for proper windowing,
-    // however both outer bins seem to be noisy and will be suppressed anyway after windowing
-
-    // analysis.auxoutput[0] = analysis.auxoutput[dftsize];
-    // analysis.auxoutput[dftsize + 1] = analysis.auxoutput[1];
+    analysis.auxoutput[0] = std::conj(analysis.auxoutput[2]);
+    analysis.auxoutput[dftsize + 1] = std::conj(analysis.auxoutput[dftsize - 1]);
 
     for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
     {
@@ -122,11 +118,6 @@ public:
                       analysis.auxoutput[j + 1],
                       weight);
     }
-
-    // NOTE 3/3
-    // finally suppress outer DFT bins as announced in the comment above
-
-    dft[0] = dft[dftsize - 1] = 0;
 
     if (++analysis.cursor > analysis.maxcursor)
     {

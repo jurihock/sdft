@@ -143,12 +143,13 @@ class SDFT:
 
         M, N = x.shape
 
-        left = x[:, :-2]
-        right = x[:, +2:]
-        middle = x[:, +1:-1]
+        y = numpy.hstack((
+            numpy.conj(x[:,1][:,None]),
+            x,
+            numpy.conj(x[:,-2][:,None])))
 
-        y = ((middle + middle) - (left + right)) / (N * 4)
+        left = y[:, :-2]
+        right = y[:, +2:]
+        middle = y[:, +1:-1]
 
-        y = numpy.pad(y, ((0, 0), (1, 1)))
-
-        return y
+        return ((middle + middle) - (left + right)) / (N * 4)

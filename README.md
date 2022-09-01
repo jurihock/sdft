@@ -103,9 +103,6 @@ Feel free to obtain the current version from the PyPI `pip install sdft`.
 - Compared to the equivalent STFT implementation, the SDFT magnitude differs exactly by a factor of 2.
 - Which could easily be corrected in the case of an absolute magnitude estimate or just ignored otherwise.
 
-- The outer SDFT bins "DC" and "Nyquist" are set to zero by default.
-- Hopefully this shouldn't be a huge deal for a causal audio signal.
-
 - Finally the Python implementation is much slower than C/C++.
 
 ## References
