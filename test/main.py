@@ -62,9 +62,9 @@ def main():
 
     # plot spectrograms
 
-    figure('stft').spectrogram(ref, sr, hopsize, ylim=(500, 15e3), yscale='log').tight()
-    figure('c').spectrogram(dfts['c'], sr, hopsize, ylim=(500, 15e3), yscale='log').tight()
-    figure('py').spectrogram(dfts['py'], sr, hopsize, ylim=(500, 15e3), yscale='log').tight()
+    figure('stft').spectrogram(ref, sr, hopsize, xlim=(0, 8), ylim=(500, 15e3), yscale='log').tight()
+    figure('c').spectrogram(dfts['c'], sr, hopsize, xlim=(0, 8), ylim=(500, 15e3), yscale='log').tight()
+    figure('py').spectrogram(dfts['py'], sr, hopsize, xlim=(0, 8), ylim=(500, 15e3), yscale='log').tight()
     show()
 
 
