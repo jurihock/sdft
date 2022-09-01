@@ -128,6 +128,7 @@ struct sdft_plan_synthesis
   sdft_fd_t weight;
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
+  sdft_double_t latency;
 };
 
 typedef struct sdft_plan_synthesis sdft_synthesis_t;
@@ -135,8 +136,6 @@ typedef struct sdft_plan_synthesis sdft_synthesis_t;
 struct sdft_plan
 {
   sdft_size_t dftsize;
-  sdft_double_t latency;
-
   sdft_analysis_t analysis;
   sdft_synthesis_t synthesis;
 };
@@ -296,7 +295,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft_t* sdft = malloc(sizeof(sdft_t));
 
   sdft->dftsize = dftsize;
-  sdft->latency = latency;
 
   sdft->analysis.weight = (sdft_fd_t)(1) / (dftsize * 2);
   sdft->synthesis.weight = (sdft_fd_t)(2);
@@ -306,6 +304,8 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
 
   sdft->analysis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->synthesis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
+
+  sdft->synthesis.latency = latency;
 
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
@@ -421,6 +421,14 @@ sdft_size_t sdft_size(const sdft_t* sdft)
 }
 
 /**
+ * Returns the assigned synthesis latency factor.
+ **/
+sdft_double_t latency(const sdft_t* sdft)
+{
+  return (sdft != NULL) ? sdft->synthesis.latency : 0;
+}
+
+/**
  * Estimates the DFT vector for the given sample.
  * @param sdft SDFT plan instance.
  * @param sample Single sample to be analyzed.
@@ -493,7 +501,7 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 {
   sdft_fd_t sample = (sdft_fd_t)(0);
 
-  if (sdft->latency == 1)
+  if (sdft->synthesis.latency == 1)
   {
     for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
     {

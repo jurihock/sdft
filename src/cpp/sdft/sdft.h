@@ -39,8 +39,7 @@ public:
    *                A smaller value decreases both latency and SNR, but also increases the workload.
    **/
   SDFT(const size_t dftsize, const double latency = 1) :
-    dftsize(dftsize),
-    latency(latency)
+    dftsize(dftsize)
   {
     analysis.weight = F(1) / (dftsize * 2);
     synthesis.weight = F(2);
@@ -50,6 +49,8 @@ public:
 
     analysis.twiddles.resize(dftsize);
     synthesis.twiddles.resize(dftsize);
+
+    synthesis.latency = latency;
 
     analysis.cursor = 0;
     analysis.maxcursor = dftsize * 2 - 1;
@@ -87,6 +88,14 @@ public:
   size_t size() const
   {
     return dftsize;
+  }
+
+  /**
+   * Returns the assigned synthesis latency factor.
+   **/
+  double latency() const
+  {
+    return synthesis.latency;
   }
 
   /**
@@ -158,7 +167,7 @@ public:
   {
     F sample = F(0);
 
-    if (latency == 1)
+    if (synthesis.latency == 1)
     {
       for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
       {
@@ -209,7 +218,6 @@ public:
 private:
 
   const size_t dftsize;
-  const double latency;
 
   struct
   {
@@ -232,6 +240,8 @@ private:
     F weight;
     std::pair<size_t, size_t> roi;
     std::vector<std::complex<F>> twiddles;
+
+    double latency;
   }
   synthesis;
 

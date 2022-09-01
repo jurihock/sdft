@@ -35,7 +35,7 @@ class SDFT:
             A smaller value decreases both latency and SNR, but also increases the workload.
         """
 
-        self.dftsize = dftsize
+        self.size = dftsize
         self.latency = latency
 
         self.offset = 0
@@ -50,13 +50,6 @@ class SDFT:
         self.offset = 0
         self.delayline.fill(0)
         self.accumulator.fill(0)
-
-    def size(self):
-        """
-        Get the assigned number of DFT bins.
-        """
-
-        return self.dftsize
 
     def sdft(self, samples):
         """
@@ -78,7 +71,7 @@ class SDFT:
         assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
         M = samples.size
-        N = self.dftsize
+        N = self.size
 
         m = numpy.arange(self.offset, self.offset + M + 1)[:, None]
         n = numpy.arange(N)
