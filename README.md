@@ -9,7 +9,7 @@ Forward and inverse SDFT according to [[1]](#1) and [[2]](#2) with following goo
 - Arbitrary number of DFT bins
 - Hann window at analysis
 - Single or multiple sample processing at once
-- Continuous data processing without resets
+- Endless forward/inverse transform
 - Optional synthesis latency control parameter
 
 ## Usage
