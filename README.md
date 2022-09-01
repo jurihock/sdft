@@ -97,7 +97,7 @@ Below you can see two spectrograms of the same file `test.wav` computed by SDFT 
 | ---- | ---- |
 | ![SDFT](test/sdft.png) | ![STFT](test/stft.png) |
 
-Well, the results are very similar, which is the proof of concept...
+Well, the results are very similar, which is to be considered as the proof of concept...
 
 ## Implementation details
 
