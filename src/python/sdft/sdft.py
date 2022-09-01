@@ -99,6 +99,8 @@ class SDFT:
 
         dfts = self.window(data)
 
+        dfts /= 2
+
         return dfts
 
     def isdft(self, dfts):
@@ -129,6 +131,8 @@ class SDFT:
         weight = 2 / (1 - numpy.cos(numpy.pi * self.latency))
 
         samples = numpy.sum(numpy.real(dfts * twiddles * weight), axis=-1)
+
+        samples *= 2
 
         return samples
 

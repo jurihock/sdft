@@ -108,6 +108,7 @@ typedef struct sdft_plan_roi sdft_roi_t;
 
 struct sdft_plan_analysis
 {
+  sdft_fd_t weight;
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
 
@@ -124,6 +125,7 @@ typedef struct sdft_plan_analysis sdft_analysis_t;
 
 struct sdft_plan_synthesis
 {
+  sdft_fd_t weight;
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
 };
@@ -296,6 +298,9 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->dftsize = dftsize;
   sdft->latency = latency;
 
+  sdft->analysis.weight = (sdft_fd_t)(1) / (dftsize * 2);
+  sdft->synthesis.weight = (sdft_fd_t)(2);
+
   sdft->analysis.roi = (sdft_roi_t){ 0, dftsize };
   sdft->synthesis.roi = (sdft_roi_t){ 0, dftsize };
 
@@ -423,12 +428,6 @@ sdft_size_t sdft_size(const sdft_t* sdft)
  **/
 void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
-  // NOTE
-  // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
-  // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
-
-  const sdft_fd_t weight = (sdft_fd_t)(1) / sdft->dftsize;
-
   const sdft_fd_t delta = sample - sdft_etc_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
 
   for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
@@ -446,7 +445,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     dft[i] = sdft_etc_window(sdft->analysis.auxoutput[j - 1],
                              sdft->analysis.auxoutput[j],
                              sdft->analysis.auxoutput[j + 1],
-                             weight);
+                             sdft->analysis.weight);
   }
 
   if (++sdft->analysis.cursor > sdft->analysis.maxcursor)
@@ -508,6 +507,8 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
       sample += sdft_etc_real(sdft_etc_mul(dft[i], sdft->synthesis.twiddles[i]));
     }
   }
+
+  sample *= sdft->synthesis.weight;
 
   return (sdft_td_t)(sample);
 }

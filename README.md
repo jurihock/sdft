@@ -97,13 +97,8 @@ Feel free to obtain the current version from the PyPI `pip install sdft`.
 
 ## Implementation details
 
-- Both the C and the C++ implementation correspond to figure 4 in [[1]](#1).
+- The C/C++ implementation corresponds to figure 4 in [[1]](#1).
 - The Python implementation corresponds to figure 3b in [[1]](#1).
-
-- Compared to the equivalent STFT implementation, the SDFT magnitude differs exactly by a factor of 2.
-- Which could easily be corrected in the case of an absolute magnitude estimate or just ignored otherwise.
-
-- Finally the Python implementation is much slower than C/C++.
 
 ## References
 

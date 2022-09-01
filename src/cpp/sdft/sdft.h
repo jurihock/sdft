@@ -42,6 +42,9 @@ public:
     dftsize(dftsize),
     latency(latency)
   {
+    analysis.weight = F(1) / (dftsize * 2);
+    synthesis.weight = F(2);
+
     analysis.roi = { 0, dftsize };
     synthesis.roi = { 0, dftsize };
 
@@ -93,12 +96,6 @@ public:
    **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
-    // NOTE
-    // actually the weight denominator needs to be dftsize*2 to get proper magnitude scaling,
-    // but then requires a multiplication by factor 2 in synthesis and is therefore omitted
-
-    const F weight = F(1) / dftsize;
-
     const F delta = sample - exchange(analysis.input[analysis.cursor], sample);
 
     for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
@@ -116,7 +113,7 @@ public:
       dft[i] = window(analysis.auxoutput[j - 1],
                       analysis.auxoutput[j],
                       analysis.auxoutput[j + 1],
-                      weight);
+                      analysis.weight);
     }
 
     if (++analysis.cursor > analysis.maxcursor)
@@ -176,6 +173,8 @@ public:
       }
     }
 
+    sample *= synthesis.weight;
+
     return static_cast<T>(sample);
   }
 
@@ -214,6 +213,7 @@ private:
 
   struct
   {
+    F weight;
     std::pair<size_t, size_t> roi;
     std::vector<std::complex<F>> twiddles;
 
@@ -229,6 +229,7 @@ private:
 
   struct
   {
+    F weight;
     std::pair<size_t, size_t> roi;
     std::vector<std::complex<F>> twiddles;
   }
