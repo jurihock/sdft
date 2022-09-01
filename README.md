@@ -89,11 +89,15 @@ y = sdft.isdft(dft) # synthesize output samples from dft matrix
 
 Feel free to obtain the current version from the PyPI `pip install sdft`.
 
-## Test spectrogram (test.wav)
+## Test spectrogram
+
+Below you can see two spectrograms of the same file `test.wav` computed by SDFT and STFT with identical spectral resolution, window function and hop size. Do you see any difference between them?
 
 | SDFT | STFT |
 | ---- | ---- |
 | ![SDFT](test/sdft.png) | ![STFT](test/stft.png) |
+
+Yeah, it's hard to find any differences, because both techniques provides a very similar result. That's exactly the proof of concept...
 
 ## Implementation details
 
