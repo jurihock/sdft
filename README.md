@@ -91,7 +91,7 @@ Feel free to obtain the current version from the PyPI `pip install sdft`.
 
 ## Test spectrogram
 
-Below you can see two spectrograms of the same file `test.wav` computed by SDFT and STFT with identical spectral resolution, window function and hop size. Do you see any difference between them?
+Below you can see two spectrograms of the same file `test.wav` computed by SDFT and STFT with identical spectral resolution, window function and hop size. Do you see any significant difference between them?
 
 | SDFT | STFT |
 | ---- | ---- |
