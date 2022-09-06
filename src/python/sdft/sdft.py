@@ -1,4 +1,8 @@
 """
+Copyright (c) 2022 Juergen Hock
+
+SPDX-License-Identifier: MIT
+
 Modulated Sliding DFT implementation according to [1] combined with [2].
 
 [1] Krzysztof Duda
@@ -10,6 +14,8 @@ Modulated Sliding DFT implementation according to [1] combined with [2].
     Sliding is Smoother than Jumping
     International Computer Music Conference (2005)
     http://hdl.handle.net/2027/spo.bbp2372.2005.086
+
+Source: https://github.com/jurihock/sdft
 """
 
 

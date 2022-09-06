@@ -1,4 +1,8 @@
 /**
+ * Copyright (c) 2022 Juergen Hock
+ *
+ * SPDX-License-Identifier: MIT
+ *
  * Modulated Sliding DFT implementation according to [1] combined with [2].
  *
  * [1] Krzysztof Duda
@@ -10,6 +14,8 @@
  *     Sliding is Smoother than Jumping
  *     International Computer Music Conference (2005)
  *     http://hdl.handle.net/2027/spo.bbp2372.2005.086
+ *
+ * Source: https://github.com/jurihock/sdft
  **/
 
 /**
@@ -21,7 +27,7 @@
  * #define SDFT_TD_LONG_DOUBLE
  *
  * #define SDFT_FD_FLOAT
- * #define SDFT_FD_DOUBLE       // default, recommended
+ * #define SDFT_FD_DOUBLE       // default and recommended
  * #define SDFT_FD_LONG_DOUBLE
  *
  * The specified data type appears as typedef
@@ -29,12 +35,14 @@
  **/
 
 /**
- * List of common functions:
+ * List of common functions to start with:
  *
- * sdft_alloc
+ * sdft_alloc[_custom]
  * sdft_free
  *
+ * sdft_reset
  * sdft_size
+ * sdft_latency
  *
  * sdft_sdft
  * sdft_sdft_n
@@ -43,6 +51,8 @@
  * sdft_isdft
  * sdft_isdft_n
  * sdft_isdft_nd
+ *
+ * Functions sdft_etc_* are for internal use.
  **/
 
 #pragma once
@@ -423,7 +433,7 @@ sdft_size_t sdft_size(const sdft_t* sdft)
 /**
  * Returns the assigned synthesis latency factor.
  **/
-sdft_double_t latency(const sdft_t* sdft)
+sdft_double_t sdft_latency(const sdft_t* sdft)
 {
   return (sdft != NULL) ? sdft->synthesis.latency : 0;
 }
