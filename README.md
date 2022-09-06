@@ -7,7 +7,7 @@
 Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with following features:
 
 - Arbitrary number of DFT bins
-- Hann window at analysis
+- Built-in Hann window at analysis
 - Customizable time and frequency domain data type in C/C++
 - Single or multiple sample processing at once
 - Optional synthesis latency control parameter
