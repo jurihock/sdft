@@ -8,8 +8,8 @@ Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with follow
 
 - Arbitrary number of DFT bins
 - Hann window at analysis
+- Customizable time and frequency domain data type in C/C++
 - Single or multiple sample processing at once
-- Endless forward/inverse transform
 - Optional synthesis latency control parameter
 
 The [Sliding Discrete Fourier Transform (SDFT)](https://en.wikipedia.org/wiki/Sliding_DFT) is a recursive approach to compute the Fourier transform sample by sample. In this particular case it's more efficient than the FFT based [Short Time Fourier Transform (STFT)](https://en.wikipedia.org/wiki/Short-time_Fourier_transform) approach with one sample hops. On the other side, the SDFT is still known to suffer from accumulated errors and potential instabilities.
