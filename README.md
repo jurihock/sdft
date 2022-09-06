@@ -107,8 +107,8 @@ Well, the results are very similar, which is to be considered as the proof of co
 
 ## Implementation details
 
-- The C/C++ implementation corresponds to figure 4 in [[1]](#1).
-- The Python implementation corresponds to figure 3b in [[1]](#1).
+- C/C++ implementation corresponds to figure 4 in [[1]](#1).
+- Python implementation corresponds to figure 3b in [[1]](#1).
 
 ## References
 
