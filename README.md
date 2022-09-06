@@ -4,7 +4,7 @@
 ![license](https://img.shields.io/github/license/jurihock/sdft?color=green)
 ![pypi](https://img.shields.io/pypi/v/sdft?color=gold)
 
-Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with following goodies:
+Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with following features:
 
 - Arbitrary number of DFT bins
 - Hann window at analysis
