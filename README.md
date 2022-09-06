@@ -44,7 +44,7 @@ sdft_isdft_n(sdft, n, dft, y); // synthesize output samples from dft matrix
 sdft_free(sdft); // destroy sdft plan
 ```
 
-Due to incomplete C complex math support in [MSVC](https://docs.microsoft.com/cpp/c-runtime-library/complex-math-support), optionally use following universal typedefs:
+Due to incomplete [C complex math support](https://docs.microsoft.com/cpp/c-runtime-library/complex-math-support) in MSVC, optionally use following universal typedefs:
 
 * `sdft_float_t` instead of `float`
 * `sdft_double_complex_t` instead of `double complex`
