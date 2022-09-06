@@ -101,7 +101,7 @@ Below you can see two spectrograms of the same file `test.wav` computed by SDFT 
 
 | SDFT | STFT |
 | ---- | ---- |
-| ![SDFT](test/sdft.png) | ![STFT](test/stft.png) |
+| ![SDFT](https://github.com/jurihock/sdft/blob/main/test/sdft.png) | ![STFT](https://github.com/jurihock/sdft/blob/main/test/stft.png) |
 
 Well, the results are very similar, which is to be considered as the proof of concept...
 
