@@ -448,11 +448,27 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 {
   const sdft_fd_t delta = sample - sdft_etc_exchange(&sdft->analysis.input[sdft->analysis.cursor], sample);
 
-  for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  if (sdft->analysis.cursor >= sdft->analysis.maxcursor)
   {
-    sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
-    sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
-    sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
+    sdft->analysis.cursor = 0;
+
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+    {
+      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
+      sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
+      sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i];
+    }
+  }
+  else
+  {
+    sdft->analysis.cursor += 1;
+
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+    {
+      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
+      sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
+      sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
+    }
   }
 
   sdft->analysis.auxoutput[0] = sdft_etc_conj(sdft->analysis.auxoutput[2]);
@@ -464,11 +480,6 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
                              sdft->analysis.auxoutput[j],
                              sdft->analysis.auxoutput[j + 1],
                              sdft->analysis.weight);
-  }
-
-  if (++sdft->analysis.cursor > sdft->analysis.maxcursor)
-  {
-    sdft->analysis.cursor = 0;
   }
 }
 

@@ -113,11 +113,27 @@ public:
   {
     const F delta = sample - exchange(analysis.input[analysis.cursor], sample);
 
-    for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+    if (analysis.cursor >= analysis.maxcursor)
     {
-      analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
-      analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
-      analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
+      analysis.cursor = 0;
+
+      for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+      {
+        analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
+        analysis.fiddles[i]   = 1;
+        analysis.auxoutput[j] = analysis.accoutput[i];
+      }
+    }
+    else
+    {
+      analysis.cursor += 1;
+
+      for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+      {
+        analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
+        analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
+        analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
+      }
     }
 
     analysis.auxoutput[0] = std::conj(analysis.auxoutput[2]);
@@ -129,11 +145,6 @@ public:
                       analysis.auxoutput[j],
                       analysis.auxoutput[j + 1],
                       analysis.weight);
-    }
-
-    if (++analysis.cursor > analysis.maxcursor)
-    {
-      analysis.cursor = 0;
     }
   }
 
