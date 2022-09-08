@@ -16,7 +16,7 @@ The [Sliding Discrete Fourier Transform (SDFT)](https://en.wikipedia.org/wiki/Sl
 
 This implementation features the *modulated* SDFT algorithm, which is guaranteed to be stable while being accurate. It takes real valued samples and estimates the corresponding half size complex valued DFT vector for each of them. The length of the estimated DFT vector is not limited to the power of two. The eventually altered DFT vector can also be used to synthesize an output sample.
 
-Compared to STFT, the algorithmic synthesis latency of SDFT is lower and can additionally be reduced at the expense of signal to noise ratio. Spectral data processing combined with reduced latency is particularly useful for real-time applications, e.g. digital audio signal processing.
+Compared to STFT, the algorithmic synthesis latency of SDFT is lower and can additionally be reduced at the expense of signal to noise ratio. Spectral data processing coupled with reduced latency is especially useful for real-time applications, e.g. digital audio signal processing.
 
 ## Usage
 
