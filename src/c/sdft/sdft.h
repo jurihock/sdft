@@ -57,7 +57,10 @@
 
 #pragma once
 
+#if !defined(SDFT_NO_COMPLEX_H)
 #include <complex.h>
+#endif
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +79,14 @@ typedef float sdft_float_t;
 typedef double sdft_double_t;
 typedef long double sdft_long_double_t;
 
-#if defined(SDFT_MSVC)
+#if defined(SDFT_NO_COMPLEX_H)
+  struct sdft_float_complex { float r; float i; };
+  struct sdft_double_complex { double r; double i; };
+  struct sdft_long_double_complex { long double r; long double i; };
+  typedef struct sdft_float_complex sdft_float_complex_t;
+  typedef struct sdft_double_complex sdft_double_complex_t;
+  typedef struct sdft_long_double_complex sdft_long_double_complex_t;
+#elif defined(SDFT_MSVC)
   typedef _Fcomplex sdft_float_complex_t;
   typedef _Dcomplex sdft_double_complex_t;
   typedef _Lcomplex sdft_long_double_complex_t;
@@ -187,23 +197,31 @@ sdft_fd_t sdft_etc_acos(const sdft_fd_t arg)
 
 sdft_fd_t sdft_etc_real(const sdft_fdx_t z)
 {
-  #if defined(SDFT_FD_FLOAT)
-    return crealf(z);
-  #elif defined(SDFT_FD_DOUBLE)
-    return creal(z);
-  #elif defined(SDFT_FD_LONG_DOUBLE)
-    return creall(z);
+  #if defined(SDFT_NO_COMPLEX_H)
+    return z.r;
+  #else
+    #if defined(SDFT_FD_FLOAT)
+      return crealf(z);
+    #elif defined(SDFT_FD_DOUBLE)
+      return creal(z);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return creall(z);
+    #endif
   #endif
 }
 
 sdft_fd_t sdft_etc_imag(const sdft_fdx_t z)
 {
-  #if defined(SDFT_FD_FLOAT)
-    return cimagf(z);
-  #elif defined(SDFT_FD_DOUBLE)
-    return cimag(z);
-  #elif defined(SDFT_FD_LONG_DOUBLE)
-    return cimagl(z);
+  #if defined(SDFT_NO_COMPLEX_H)
+    return z.i;
+  #else
+    #if defined(SDFT_FD_FLOAT)
+      return cimagf(z);
+    #elif defined(SDFT_FD_DOUBLE)
+      return cimag(z);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return cimagl(z);
+    #endif
   #endif
 }
 
@@ -214,18 +232,26 @@ sdft_fdx_t sdft_etc_complex(const sdft_fd_t r, const sdft_fd_t i)
 
 sdft_fdx_t sdft_etc_conj(const sdft_fdx_t z)
 {
-  #if defined(SDFT_FD_FLOAT)
-    return conjf(z);
-  #elif defined(SDFT_FD_DOUBLE)
-    return conj(z);
-  #elif defined(SDFT_FD_LONG_DOUBLE)
-    return conjl(z);
+  #if defined(SDFT_NO_COMPLEX_H)
+    return sdft_etc_complex(z.r, -z.i);
+  #else
+    #if defined(SDFT_FD_FLOAT)
+      return conjf(z);
+    #elif defined(SDFT_FD_DOUBLE)
+      return conj(z);
+    #elif defined(SDFT_FD_LONG_DOUBLE)
+      return conjl(z);
+    #endif
   #endif
 }
 
 sdft_fdx_t sdft_etc_add(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(SDFT_MSVC)
+  #if defined(SDFT_NO_COMPLEX_H)
+    return sdft_etc_complex(
+      x.r + y.r,
+      x.i + y.i);
+  #elif defined(SDFT_MSVC)
     return sdft_etc_complex(
       sdft_etc_real(x) + sdft_etc_real(y),
       sdft_etc_imag(x) + sdft_etc_imag(y));
@@ -236,7 +262,11 @@ sdft_fdx_t sdft_etc_add(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_sub(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(SDFT_MSVC)
+  #if defined(SDFT_NO_COMPLEX_H)
+    return sdft_etc_complex(
+      x.r - y.r,
+      x.i - y.i);
+  #elif defined(SDFT_MSVC)
     return sdft_etc_complex(
       sdft_etc_real(x) - sdft_etc_real(y),
       sdft_etc_imag(x) - sdft_etc_imag(y));
@@ -247,7 +277,11 @@ sdft_fdx_t sdft_etc_sub(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(SDFT_MSVC)
+  #if defined(SDFT_NO_COMPLEX_H)
+    return sdft_etc_complex(
+      x.r * y.r - x.i * y.i,
+      x.r * y.i + x.i * y.r);
+  #elif defined(SDFT_MSVC)
     #if defined(SDFT_FD_FLOAT)
       return _FCmulcc(x, y);
     #elif defined(SDFT_FD_DOUBLE)
@@ -262,7 +296,11 @@ sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_mul_real(const sdft_fd_t x, const sdft_fdx_t y)
 {
-  #if defined(SDFT_MSVC)
+  #if defined(SDFT_NO_COMPLEX_H)
+    return sdft_etc_complex(
+      x * y.r,
+      x * y.i);
+  #elif defined(SDFT_MSVC)
     #if defined(SDFT_FD_FLOAT)
       return _FCmulcr(y, x);
     #elif defined(SDFT_FD_DOUBLE)
@@ -271,20 +309,24 @@ sdft_fdx_t sdft_etc_mul_real(const sdft_fd_t x, const sdft_fdx_t y)
       return _LCmulcr(y, x);
     #endif
   #else
-    return y * x;
+    return x * y;
   #endif
 }
 
 sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t t)
 {
-  const sdft_fdx_t i = sdft_etc_complex(0, 1);
-
   #if defined(SDFT_FD_FLOAT)
-    return sdft_etc_mul_real(r, cexpf(sdft_etc_mul_real(t, i)));
+    return sdft_etc_complex(
+      r * cosf(t),
+      r * sinf(t));
   #elif defined(SDFT_FD_DOUBLE)
-    return sdft_etc_mul_real(r, cexp(sdft_etc_mul_real(t, i)));
+    return sdft_etc_complex(
+      r * cos(t),
+      r * sin(t));
   #elif defined(SDFT_FD_LONG_DOUBLE)
-    return sdft_etc_mul_real(r, cexpl(sdft_etc_mul_real(t, i)));
+    return sdft_etc_complex(
+      r * cosl(t),
+      r * sinl(t));
   #endif
 }
 
@@ -293,6 +335,7 @@ sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const
   const sdft_fdx_t x = sdft_etc_add(middle, middle);
   const sdft_fdx_t y = sdft_etc_add(left, right);
   const sdft_fdx_t z = sdft_etc_sub(x, y);
+
   return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, z);
 }
 
