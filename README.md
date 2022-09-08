@@ -44,6 +44,8 @@ sdft_isdft_n(sdft, n, dft, y); // synthesize output samples from dft matrix
 sdft_free(sdft); // destroy sdft plan
 ```
 
+#### MSVC
+
 Due to incomplete [C complex math support](https://docs.microsoft.com/cpp/c-runtime-library/complex-math-support) in MSVC, optionally use following universal typedefs:
 
 * `sdft_float_t` instead of `float`
@@ -55,6 +57,10 @@ or even better the corresponding generic typedefs:
 * `sdft_fdx_t`
 
 In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` definitions.
+
+#### No complex.h? No problem...
+
+Just define `SDFT_NO_COMPLEX_H` to avoid `complex.h` from being included and falling back to the internal compatible complex number representation.
 
 ### C++
 
