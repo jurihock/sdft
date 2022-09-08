@@ -118,5 +118,5 @@ Well, the results are very similar, which is to be considered as the proof of co
 
 ## License
 
-This *sdft* implementation is licensed under the terms of the MIT license.
-For details please refer to the accompanying [LICENSE](LICENSE) file distributed with it.
+[github.com/jurihock/sdft](https://github.com/jurihock/sdft) is licensed under the terms of the MIT license.
+For details please refer to the accompanying [LICENSE](https://github.com/jurihock/sdft/raw/main/LICENSE) file distributed with it.
