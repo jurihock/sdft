@@ -67,7 +67,7 @@ public:
     analysis.fiddles.resize(dftsize, 1);
 
     const F pi = F(-2) * std::acos(F(-1)) / (dftsize * 2);
-    const F weight = F(2) / (F(1) - std::cos(pi * dftsize * latency));
+    const F weight = F(+2) / (F(1) - std::cos(pi * dftsize * latency));
 
     for (size_t i = 0; i < dftsize; ++i)
     {

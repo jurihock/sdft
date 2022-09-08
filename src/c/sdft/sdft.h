@@ -57,20 +57,20 @@
 
 #pragma once
 
-#if !defined(SDFT_NO_COMPLEX_H)
-#include <complex.h>
-#endif
-
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(_MSC_VER)
-#define SDFT_MSVC
+#if !defined(SDFT_NO_COMPLEX_H)
+#include <complex.h>
 #endif
 
 #if defined(__cplusplus)
 extern "C" {
+#endif
+
+#if defined(_MSC_VER)
+#define SDFT_MSVC
 #endif
 
 typedef size_t sdft_size_t;
@@ -378,7 +378,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   }
 
   const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
-  const sdft_fd_t weight = (sdft_fd_t)(2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
+  const sdft_fd_t weight = (sdft_fd_t)(+2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
 
   for (sdft_size_t i = 0; i < dftsize; ++i)
   {
