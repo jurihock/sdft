@@ -62,6 +62,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+#define SDFT_MSVC
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -72,7 +76,7 @@ typedef float sdft_float_t;
 typedef double sdft_double_t;
 typedef long double sdft_long_double_t;
 
-#if defined(_MSC_VER)
+#if defined(SDFT_MSVC)
   typedef _Fcomplex sdft_float_complex_t;
   typedef _Dcomplex sdft_double_complex_t;
   typedef _Lcomplex sdft_long_double_complex_t;
@@ -221,7 +225,7 @@ sdft_fdx_t sdft_etc_conj(const sdft_fdx_t z)
 
 sdft_fdx_t sdft_etc_add(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(_MSC_VER)
+  #if defined(SDFT_MSVC)
     return sdft_etc_complex(
       sdft_etc_real(x) + sdft_etc_real(y),
       sdft_etc_imag(x) + sdft_etc_imag(y));
@@ -232,7 +236,7 @@ sdft_fdx_t sdft_etc_add(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_sub(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(_MSC_VER)
+  #if defined(SDFT_MSVC)
     return sdft_etc_complex(
       sdft_etc_real(x) - sdft_etc_real(y),
       sdft_etc_imag(x) - sdft_etc_imag(y));
@@ -243,7 +247,7 @@ sdft_fdx_t sdft_etc_sub(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
 {
-  #if defined(_MSC_VER)
+  #if defined(SDFT_MSVC)
     #if defined(SDFT_FD_FLOAT)
       return _FCmulcc(x, y);
     #elif defined(SDFT_FD_DOUBLE)
@@ -258,7 +262,7 @@ sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
 
 sdft_fdx_t sdft_etc_mul_real(const sdft_fd_t x, const sdft_fdx_t y)
 {
-  #if defined(_MSC_VER)
+  #if defined(SDFT_MSVC)
     #if defined(SDFT_FD_FLOAT)
       return _FCmulcr(y, x);
     #elif defined(SDFT_FD_DOUBLE)
