@@ -147,7 +147,7 @@ class SDFT:
         M, N = x.shape
 
         y = numpy.hstack((
-            numpy.conj(x[:,1][:,None]),
+            numpy.conj(x[:,+1][:,None]),
             x,
             numpy.conj(x[:,-2][:,None])))
 
