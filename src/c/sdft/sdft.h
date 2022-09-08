@@ -349,7 +349,7 @@ sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const
  **/
 sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency)
 {
-  sdft_t* sdft = malloc(sizeof(sdft_t));
+  sdft_t* sdft = (sdft_t*)malloc(sizeof(sdft_t));
 
   sdft->dftsize = dftsize;
 
@@ -359,18 +359,18 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.roi = (sdft_roi_t){ 0, dftsize };
   sdft->synthesis.roi = (sdft_roi_t){ 0, dftsize };
 
-  sdft->analysis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
-  sdft->synthesis.twiddles = calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->analysis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->synthesis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
   sdft->synthesis.latency = latency;
 
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
-  sdft->analysis.input = calloc(dftsize * 2, sizeof(sdft_td_t));
+  sdft->analysis.input = (sdft_td_t*)calloc(dftsize * 2, sizeof(sdft_td_t));
 
-  sdft->analysis.accoutput = calloc(dftsize, sizeof(sdft_fdx_t));
-  sdft->analysis.auxoutput = calloc(dftsize + 2, sizeof(sdft_fdx_t));
-  sdft->analysis.fiddles = calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->analysis.accoutput = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + 2, sizeof(sdft_fdx_t));
+  sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < dftsize; ++i)
   {
