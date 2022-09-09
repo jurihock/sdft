@@ -48,6 +48,8 @@ class SDFT:
         self.delayline = numpy.zeros(dftsize * 2, float)
         self.accumulator = numpy.zeros(dftsize, complex)
 
+        self.twiddles = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
+
     def reset(self):
         """
         Reset this SDFT plan to its initial state.
@@ -79,12 +81,15 @@ class SDFT:
         M = samples.size
         N = self.size
 
-        m = numpy.arange(self.offset, self.offset + M + 1)[:, None]
+        m = self.offset
         n = numpy.arange(N)
 
         self.offset += M
 
-        twiddles = numpy.exp(-2j * numpy.pi * m * n / (N * 2))
+        twiddles = self.twiddles[None, :]
+        twiddles = numpy.repeat(twiddles, M + 1, axis=0)
+        twiddles[0] **= m
+        numpy.cumprod(twiddles, axis=0, out=twiddles)
 
         delayline = numpy.concatenate((self.delayline, samples))
         numpy.copyto(self.delayline, delayline[-(N * 2):])
@@ -92,15 +97,13 @@ class SDFT:
         data = data[:, None] * twiddles[:-1]
 
         data[0] += self.accumulator
-        numpy.add.accumulate(data, axis=0, out=data)
+        numpy.cumsum(data, axis=0, out=data)
         numpy.copyto(self.accumulator, data[-1])
         data *= numpy.conj(twiddles[1:])
 
         dfts = self.window(data)
 
-        dfts /= 2
-
-        return dfts
+        return dfts / 2
 
     def isdft(self, dfts):
         """
@@ -131,9 +134,7 @@ class SDFT:
 
         samples = numpy.sum(numpy.real(dfts * twiddles * weight), axis=-1)
 
-        samples *= 2
-
-        return samples
+        return samples * 2
 
     def window(self, x):
         """

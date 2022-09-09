@@ -115,11 +115,6 @@ Below you can see two spectrograms of the same audio file `test.wav` computed by
 
 Well, the results are very similar, which is to be considered as the proof of concept...
 
-## Implementation details
-
-- C/C++ implementation corresponds to figure 4 in [[1]](#1).
-- Python implementation corresponds to figure 3b in [[1]](#1).
-
 ## References
 
 1. <span id="1">Krzysztof Duda (2010). Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform. IEEE Signal Processing Magazine. https://ieeexplore.ieee.org/document/5563098</span>
