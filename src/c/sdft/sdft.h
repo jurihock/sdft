@@ -32,6 +32,8 @@
  *
  * The specified data type appears as typedef
  * sdft_td_t, sdft_fd_t and sdft_fdx_t for complex numbers.
+ *
+ * Optionally define SDFT_NO_COMPLEX_H to not include the complex.h header.
  **/
 
 /**
