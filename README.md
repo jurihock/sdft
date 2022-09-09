@@ -79,13 +79,13 @@ float* y = ...; // synthesis samples of shape (n)
 
 std::complex<double>* dft = ...; // dft matrix of shape (n, m)
 
-SDFT<float> sdft(m); // create sdft plan with time/frequency domain data type
+SDFT<float> sdft(m); // create sdft plan for specific time/frequency domain data type
 
 sdft.sdft(n, x, dft); // extract dft matrix from input samples
 sdft.isdft(n, dft, y); // synthesize output samples from dft matrix
 ```
 
-Optionally specify a different frequency domain data type like so `SDFT<float, double>`.
+The default frequency domain data type is `double`, but it can also be specified explicitly `SDFT<float, double>`.
 
 ### Python
 
