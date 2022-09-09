@@ -18,7 +18,7 @@ This implementation features the *modulated* SDFT algorithm, which is guaranteed
 
 Compared to STFT, the algorithmic synthesis latency of SDFT is lower and can additionally be reduced at the expense of signal to noise ratio. Spectral data processing coupled with reduced latency is especially useful for real-time applications, e.g. digital audio signal processing.
 
-## Usage
+## Basic usage
 
 ### C
 
@@ -44,7 +44,9 @@ sdft_isdft_n(sdft, n, dft, y); // synthesize output samples from dft matrix
 sdft_free(sdft); // destroy sdft plan
 ```
 
-#### MSVC
+<details>
+<summary><strong>MSVC</strong></summary>
+<p/>
 
 Due to incomplete [C complex math support](https://docs.microsoft.com/cpp/c-runtime-library/complex-math-support) in MSVC, optionally use following universal typedefs:
 
@@ -58,13 +60,19 @@ or even better the corresponding generic typedefs:
 
 In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_FD_*` definitions.
 
-#### No complex.h? No problem...
+</details>
+
+<details>
+<summary><strong>No complex.h? No problem...</strong></summary>
+<p/>
 
 Just define `SDFT_NO_COMPLEX_H` to prevent `complex.h` from being included and internally enable compatible complex number representation instead:
 
 ```c
 typedef struct { sdft_fd_t r, i; } sdft_fdx_t;
 ```
+
+</details>
 
 ### C++
 
