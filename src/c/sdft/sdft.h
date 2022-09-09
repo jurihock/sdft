@@ -80,9 +80,9 @@ typedef double sdft_double_t;
 typedef long double sdft_long_double_t;
 
 #if defined(SDFT_NO_COMPLEX_H)
-  struct sdft_float_complex { float r; float i; };
-  struct sdft_double_complex { double r; double i; };
-  struct sdft_long_double_complex { long double r; long double i; };
+  struct sdft_float_complex { float r, i; };
+  struct sdft_double_complex { double r, i; };
+  struct sdft_long_double_complex { long double r, i; };
   typedef struct sdft_float_complex sdft_float_complex_t;
   typedef struct sdft_double_complex sdft_double_complex_t;
   typedef struct sdft_long_double_complex sdft_long_double_complex_t;
