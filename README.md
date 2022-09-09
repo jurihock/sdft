@@ -60,7 +60,11 @@ In both cases, the underlying data type results from the `SDFT_TD_*` and `SDFT_F
 
 #### No complex.h? No problem...
 
-Just define `SDFT_NO_COMPLEX_H` to avoid `complex.h` from being included and falling back to the internal compatible complex number representation.
+Just define `SDFT_NO_COMPLEX_H` to prevent `complex.h` from being included and internally enable compatible complex number representation instead:
+
+```c
+typedef struct { sdft_fd_t r, i; } sdft_fdx_t;
+```
 
 ### C++
 
@@ -99,7 +103,7 @@ dft = sdft.sdft(x) # extract dft matrix from input samples
 y = sdft.isdft(dft) # synthesize output samples from dft matrix
 ```
 
-Feel free to obtain the current version from the PyPI `pip install sdft`.
+Feel free to obtain the current version from [PyPI](https://pypi.org/project/sdft), e.g. by executing `pip install sdft`.
 
 ## Test spectrogram
 
