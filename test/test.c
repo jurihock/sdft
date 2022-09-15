@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #define SDFT_TD_FLOAT
 #include <sdft/sdft.h>
@@ -6,20 +7,32 @@
 #include <dump.h>
 #include <wav.h>
 
+sdft_window_t getwindow(const char* window)
+{
+  if (!strcmp(window, "hann"))
+  {
+    return sdft_window_hann;
+  }
+
+  return sdft_window_boxcar;
+}
+
 int main(int argc, char* argv[])
 {
-  if (argc < 6)
+  if (argc < 7)
   {
     return 1;
   }
 
   const size_t dftsize = atoi(argv[1]);
   const size_t hopsize = atoi(argv[2]);
-  const char* srcfile = argv[3];
-  const char* wavfile = argv[4];
-  const char* dftfile = argv[5];
+  const char* window = argv[3];
 
-  sdft_t* sdft = sdft_alloc(dftsize);
+  const char* srcfile = argv[4];
+  const char* wavfile = argv[5];
+  const char* dftfile = argv[6];
+
+  sdft_t* sdft = sdft_alloc_custom(dftsize, getwindow(window), 1);
 
   float* input;
   size_t size;

@@ -9,14 +9,16 @@ from wav import readwav
 
 def main():
 
-    if len(sys.argv) < 6:
+    if len(sys.argv) < 7:
         exit(1)
 
     dftsize = int(sys.argv[1])
     hopsize = int(sys.argv[2])
-    srcfile = sys.argv[3]
-    wavfile = sys.argv[4]
-    dftfile = sys.argv[5]
+    window = sys.argv[3]
+
+    srcfile = sys.argv[4]
+    wavfile = sys.argv[5]
+    dftfile = sys.argv[6]
 
     wavfiles = {
         'c':   f'{wavfile.format("c")}',
