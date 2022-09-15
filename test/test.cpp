@@ -6,14 +6,14 @@
 #include <dump.h>
 #include <wav.h>
 
-SDFT<float>::Window getwindow(const char* window)
+SDFT<>::Window getwindow(const char* window)
 {
   if (!strcmp(window, "hann"))
   {
-    return SDFT<float>::Window::Hann;
+    return SDFT<>::Window::Hann;
   }
 
-  return SDFT<float>::Window::Boxcar;
+  return SDFT<>::Window::Boxcar;
 }
 
 int main(int argc, char *argv[])
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   const char* wavfile = argv[5];
   const char* dftfile = argv[6];
 
-  SDFT<float> sdft(dftsize, getwindow(window));
+  SDFT<> sdft(dftsize, getwindow(window));
 
   float* input;
   size_t size;

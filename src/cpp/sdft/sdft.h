@@ -28,10 +28,10 @@
 
 /**
  * Sliding Discrete Fourier Transform (SDFT).
- * @tparam T Time domain data type, which can be float, double or long double.
+ * @tparam T Time domain data type, which can be float (default), double or long double.
  * @tparam F Frequency domain data type, which can be float, double (default and recommended) or long double.
  **/
-template <typename T, typename F = double>
+template <typename T = float, typename F = double>
 class SDFT
 {
 

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define SDFT_TD_FLOAT
 #include <sdft/sdft.h>
 
 #include <dump.h>
