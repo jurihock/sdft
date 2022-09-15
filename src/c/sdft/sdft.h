@@ -124,6 +124,14 @@ typedef long double sdft_long_double_t;
   typedef sdft_double_complex_t sdft_fdx_t;
 #endif
 
+enum sdft_window
+{
+  sdft_window_boxcar,
+  sdft_window_hann
+};
+
+typedef enum sdft_window sdft_window_t;
+
 struct sdft_plan_roi
 {
   sdft_size_t first;
@@ -134,6 +142,8 @@ typedef struct sdft_plan_roi sdft_roi_t;
 
 struct sdft_plan_analysis
 {
+  sdft_window_t window;
+
   sdft_fd_t weight;
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
@@ -151,23 +161,25 @@ typedef struct sdft_plan_analysis sdft_analysis_t;
 
 struct sdft_plan_synthesis
 {
+  sdft_double_t latency;
+
   sdft_fd_t weight;
   sdft_roi_t roi;
   sdft_fdx_t* twiddles;
-  sdft_double_t latency;
 };
 
 typedef struct sdft_plan_synthesis sdft_synthesis_t;
 
 struct sdft_plan
 {
-  sdft_size_t kernelsize;
   sdft_size_t dftsize;
   sdft_analysis_t analysis;
   sdft_synthesis_t synthesis;
 };
 
 typedef struct sdft_plan sdft_t;
+
+const sdft_size_t sdft_kernel_size = 2;
 
 sdft_td_t sdft_etc_exchange(sdft_td_t* oldvalue, const sdft_td_t newvalue)
 {
@@ -333,29 +345,42 @@ sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t t)
   #endif
 }
 
-sdft_fdx_t sdft_etc_window(const sdft_fdx_t left, const sdft_fdx_t middle, const sdft_fdx_t right, const sdft_fd_t weight)
+sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t window, const sdft_fd_t weight)
 {
-  const sdft_fdx_t x = sdft_etc_add(middle, middle);
-  const sdft_fdx_t y = sdft_etc_add(left, right);
-  const sdft_fdx_t z = sdft_etc_sub(x, y);
+  switch (window)
+  {
+    case sdft_window_hann:
+    {
+      const sdft_fdx_t x = sdft_etc_add(values[sdft_kernel_size], values[sdft_kernel_size]);
+      const sdft_fdx_t y = sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]);
+      const sdft_fdx_t z = sdft_etc_sub(x, y);
 
-  return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, z);
+      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, z);
+    }
+    default:
+    {
+      return sdft_etc_mul_real(weight, values[sdft_kernel_size]);
+    }
+  }
 }
 
 /**
  * Allocates a new SDFT plan.
  * @param dftsize Desired number of DFT bins.
+ * @param window Analysis window type (boxcar, hann, hamming or blackman).
  * @param latency Synthesis latency factor between 0 and 1.
  *                The default value 1 corresponds to the highest latency and best possible SNR.
  *                A smaller value decreases both latency and SNR, but also increases the workload.
  * @return SDFT plan instance.
  **/
-sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency)
+sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window, const sdft_double_t latency)
 {
   sdft_t* sdft = (sdft_t*)malloc(sizeof(sdft_t));
 
-  sdft->kernelsize = 2;
   sdft->dftsize = dftsize;
+
+  sdft->analysis.window = window;
+  sdft->synthesis.latency = latency;
 
   sdft->analysis.weight = (sdft_fd_t)(1) / (dftsize * 2);
   sdft->synthesis.weight = (sdft_fd_t)(2);
@@ -366,14 +391,12 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->synthesis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
-  sdft->synthesis.latency = latency;
-
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
   sdft->analysis.input = (sdft_td_t*)calloc(dftsize * 2, sizeof(sdft_td_t));
 
   sdft->analysis.accoutput = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft->kernelsize * 2, sizeof(sdft_fdx_t));
+  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft_kernel_size * 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < dftsize; ++i)
@@ -400,7 +423,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
  **/
 sdft_t* sdft_alloc(const sdft_size_t dftsize)
 {
-  return sdft_alloc_custom(dftsize, 1);
+  return sdft_alloc_custom(dftsize, sdft_window_hann, 1);
 }
 
 /**
@@ -464,7 +487,7 @@ void sdft_reset(sdft_t* sdft)
 
   memset(sdft->analysis.input, 0, (sdft->dftsize * 2) * sizeof(sdft_td_t));
   memset(sdft->analysis.accoutput, 0, (sdft->dftsize) * sizeof(sdft_fdx_t));
-  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + sdft->kernelsize * 2) * sizeof(sdft_fdx_t));
+  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + sdft_kernel_size * 2) * sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < sdft->dftsize; ++i)
   {
@@ -479,6 +502,14 @@ void sdft_reset(sdft_t* sdft)
 sdft_size_t sdft_size(const sdft_t* sdft)
 {
   return (sdft != NULL) ? sdft->dftsize : 0;
+}
+
+/**
+ * Returns the assigned analysis window type.
+ **/
+sdft_window_t sdft_window(const sdft_t* sdft)
+{
+  return (sdft != NULL) ? sdft->analysis.window : sdft_window_boxcar;
 }
 
 /**
@@ -503,7 +534,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor = 0;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
@@ -514,7 +545,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor += 1;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
@@ -522,20 +553,17 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     }
   }
 
-  const sdft_size_t auxoffset[] = { sdft->kernelsize, sdft->kernelsize + (sdft->dftsize - 1) };
+  const sdft_size_t auxoffset[] = { sdft_kernel_size, sdft_kernel_size + (sdft->dftsize - 1) };
 
-  for (sdft_size_t i = 1; i <= sdft->kernelsize; ++i)
+  for (sdft_size_t i = 1; i <= sdft_kernel_size; ++i)
   {
     sdft->analysis.auxoutput[auxoffset[0] - i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[0] + i]);
     sdft->analysis.auxoutput[auxoffset[1] + i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[1] - i]);
   }
 
-  for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
+  for (sdft_size_t i = sdft->analysis.roi.first; i < sdft->analysis.roi.second; ++i)
   {
-    dft[i] = sdft_etc_window(sdft->analysis.auxoutput[j - 1],
-                             sdft->analysis.auxoutput[j],
-                             sdft->analysis.auxoutput[j + 1],
-                             sdft->analysis.weight);
+    dft[i] = sdft_etc_convolve(sdft->analysis.auxoutput + i, sdft->analysis.window, sdft->analysis.weight);
   }
 }
 

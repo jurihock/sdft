@@ -27,7 +27,7 @@ class SDFT:
     Sliding Discrete Fourier Transform (SDFT).
     """
 
-    def __init__(self, dftsize, latency=1):
+    def __init__(self, dftsize, window='hann', latency=1):
         """
         Create a new SDFT plan.
 
@@ -35,6 +35,8 @@ class SDFT:
         ----------
         dftsize : int
             Desired number of DFT bins.
+        window : str
+            Analysis window type (boxcar, hann, hamming or blackman).
         latency : float
             Synthesis latency factor between 0 and 1.
             The default value 1 corresponds to the highest latency and best possible SNR.
@@ -42,6 +44,7 @@ class SDFT:
         """
 
         self.size = dftsize
+        self.window = window
         self.latency = latency
 
         self.offset = 0
@@ -101,7 +104,7 @@ class SDFT:
         numpy.copyto(self.accumulator, data[-1])
         data *= numpy.conj(twiddles[1:])
 
-        dfts = self.window(data)
+        dfts = self.convolve(data)
 
         return dfts / 2
 
@@ -136,9 +139,9 @@ class SDFT:
 
         return samples * 2
 
-    def window(self, x):
+    def convolve(self, x):
         """
-        Apply Hann window to the specified DFT matrix.
+        Window the specified DFT matrix.
         """
 
         x = numpy.atleast_2d(x)
@@ -147,13 +150,19 @@ class SDFT:
 
         M, N = x.shape
 
-        y = numpy.hstack((
-            numpy.conj(x[:,+1][:,None]),
-            x,
-            numpy.conj(x[:,-2][:,None])))
+        if 'hann' in str(self.window).lower():
 
-        left = y[:, :-2]
-        right = y[:, +2:]
-        middle = y[:, +1:-1]
+            y = numpy.hstack((
+                numpy.conj(x[:,+1][:,None]),
+                x,
+                numpy.conj(x[:,-2][:,None])))
 
-        return ((middle + middle) - (left + right)) / (N * 4)
+            left = y[:, :-2]
+            right = y[:, +2:]
+            middle = y[:, +1:-1]
+
+            return ((middle + middle) - (left + right)) / (N * 4)
+
+        else:
+
+            return x

@@ -38,15 +38,28 @@ class SDFT
 public:
 
   /**
+   * Supported SDFT analysis window types.
+   **/
+  enum class Window
+  {
+    Boxcar,
+    Hann
+  };
+
+  /**
    * Creates a new SDFT plan.
    * @param dftsize Desired number of DFT bins.
+   * @param window Analysis window type (boxcar, hann, hamming or blackman).
    * @param latency Synthesis latency factor between 0 and 1.
    *                The default value 1 corresponds to the highest latency and best possible SNR.
    *                A smaller value decreases both latency and SNR, but also increases the workload.
    **/
-  SDFT(const size_t dftsize, const double latency = 1) :
-    kernelsize(2), dftsize(dftsize)
+  SDFT(const size_t dftsize, const SDFT::Window window = SDFT::Window::Hann, const double latency = 1) :
+    dftsize(dftsize)
   {
+    analysis.window = window;
+    synthesis.latency = latency;
+
     analysis.weight = F(1) / (dftsize * 2);
     synthesis.weight = F(2);
 
@@ -55,8 +68,6 @@ public:
 
     analysis.twiddles.resize(dftsize);
     synthesis.twiddles.resize(dftsize);
-
-    synthesis.latency = latency;
 
     analysis.cursor = 0;
     analysis.maxcursor = dftsize * 2 - 1;
@@ -94,6 +105,14 @@ public:
   size_t size() const
   {
     return dftsize;
+  }
+
+  /**
+   * Returns the assigned analysis window type.
+   **/
+  SDFT::Window window() const
+  {
+    return analysis.window;
   }
 
   /**
@@ -144,12 +163,9 @@ public:
       analysis.auxoutput[auxoffset[1] + i] = std::conj(analysis.auxoutput[auxoffset[1] - i]);
     }
 
-    for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
+    for (size_t i = analysis.roi.first; i < analysis.roi.second; ++i)
     {
-      dft[i] = window(analysis.auxoutput[j - 1],
-                      analysis.auxoutput[j],
-                      analysis.auxoutput[j + 1],
-                      analysis.weight);
+      dft[i] = convolve(analysis.auxoutput.data() + i, analysis.window, analysis.weight);
     }
   }
 
@@ -239,11 +255,13 @@ public:
 
 private:
 
-  const size_t kernelsize;
+  static const size_t kernelsize = 2;
   const size_t dftsize;
 
   struct
   {
+    SDFT::Window window;
+
     F weight;
     std::pair<size_t, size_t> roi;
     std::vector<std::complex<F>> twiddles;
@@ -260,11 +278,11 @@ private:
 
   struct
   {
+    double latency;
+
     F weight;
     std::pair<size_t, size_t> roi;
     std::vector<std::complex<F>> twiddles;
-
-    double latency;
   }
   synthesis;
 
@@ -275,9 +293,23 @@ private:
     return value;
   }
 
-  inline static std::complex<F> window(const std::complex<F>& left, const std::complex<F>& middle, const std::complex<F>& right, const F weight)
+  inline static std::complex<F> convolve(const std::complex<F>* values, const SDFT::Window window, const F weight)
   {
-    return F(0.25) * ((middle + middle) - (left + right)) * weight;
+    switch (window)
+    {
+      case SDFT::Window::Hann:
+      {
+        const std::complex<F> x = values[kernelsize] + values[kernelsize];
+        const std::complex<F> y = values[kernelsize - 1] + values[kernelsize + 1];
+        const std::complex<F> z = x - y;
+
+        return F(0.25) * weight * z;
+      }
+      default:
+      {
+        return weight * values[kernelsize];
+      }
+    }
   }
 
 };
