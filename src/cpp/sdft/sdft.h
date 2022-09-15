@@ -43,7 +43,8 @@ public:
   enum class Window
   {
     Boxcar,
-    Hann
+    Hann,
+    Hamming
   };
 
   /**
@@ -303,7 +304,14 @@ private:
         const std::complex<F> y = values[kernelsize - 1] + values[kernelsize + 1];
         const std::complex<F> z = x - y;
 
-        return F(0.25) * weight * z;
+        return F(0.25) * weight * (x - y);
+      }
+      case SDFT::Window::Hamming:
+      {
+        const std::complex<F> x = F(0.54) * values[kernelsize];
+        const std::complex<F> y = F(0.23) * (values[kernelsize - 1] + values[kernelsize + 1]);
+
+        return weight * (x - y);
       }
       default:
       {

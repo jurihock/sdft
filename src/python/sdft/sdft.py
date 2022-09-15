@@ -150,7 +150,7 @@ class SDFT:
 
         M, N = x.shape
 
-        if 'hann' in str(self.window).lower():
+        if str(self.window).lower() in 'hann':
 
             y = numpy.hstack((
                 numpy.conj(x[:,+1][:,None]),
@@ -161,8 +161,19 @@ class SDFT:
             right = y[:, +2:]
             middle = y[:, +1:-1]
 
-            return ((middle + middle) - (left + right)) / (N * 4)
+            return (0.5 * middle - 0.25 * (left + right)) / N
 
-        else:
+        if str(self.window).lower() in 'hamming':
 
-            return x / N
+            y = numpy.hstack((
+                numpy.conj(x[:,+1][:,None]),
+                x,
+                numpy.conj(x[:,-2][:,None])))
+
+            left = y[:, :-2]
+            right = y[:, +2:]
+            middle = y[:, +1:-1]
+
+            return (0.54 * middle - 0.23 * (left + right)) / N
+
+        return x / N

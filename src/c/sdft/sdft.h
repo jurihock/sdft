@@ -127,7 +127,8 @@ typedef long double sdft_long_double_t;
 enum sdft_window
 {
   sdft_window_boxcar,
-  sdft_window_hann
+  sdft_window_hann,
+  sdft_window_hamming
 };
 
 typedef enum sdft_window sdft_window_t;
@@ -353,9 +354,15 @@ sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t windo
     {
       const sdft_fdx_t x = sdft_etc_add(values[sdft_kernel_size], values[sdft_kernel_size]);
       const sdft_fdx_t y = sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]);
-      const sdft_fdx_t z = sdft_etc_sub(x, y);
 
-      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, z);
+      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, sdft_etc_sub(x, y));
+    }
+    case sdft_window_hamming:
+    {
+      const sdft_fdx_t x = sdft_etc_mul_real((sdft_fd_t)(0.54), values[sdft_kernel_size]);
+      const sdft_fdx_t y = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
+
+      return sdft_etc_mul_real(weight, sdft_etc_sub(x, y));
     }
     default:
     {
