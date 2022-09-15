@@ -165,4 +165,4 @@ class SDFT:
 
         else:
 
-            return x
+            return x / N
