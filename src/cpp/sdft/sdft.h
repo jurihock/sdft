@@ -45,7 +45,7 @@ public:
    *                A smaller value decreases both latency and SNR, but also increases the workload.
    **/
   SDFT(const size_t dftsize, const double latency = 1) :
-    dftsize(dftsize)
+    kernelsize(2), dftsize(dftsize)
   {
     analysis.weight = F(1) / (dftsize * 2);
     synthesis.weight = F(2);
@@ -63,7 +63,7 @@ public:
     analysis.input.resize(dftsize * 2);
 
     analysis.accoutput.resize(dftsize);
-    analysis.auxoutput.resize(dftsize + 2);
+    analysis.auxoutput.resize(dftsize + kernelsize * 2);
     analysis.fiddles.resize(dftsize, 1);
 
     const F pi = F(-2) * std::acos(F(-1)) / (dftsize * 2);
@@ -117,7 +117,7 @@ public:
     {
       analysis.cursor = 0;
 
-      for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+      for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
       {
         analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
         analysis.fiddles[i]   = 1;
@@ -128,7 +128,7 @@ public:
     {
       analysis.cursor += 1;
 
-      for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+      for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
       {
         analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
         analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
@@ -136,10 +136,15 @@ public:
       }
     }
 
-    analysis.auxoutput[0] = std::conj(analysis.auxoutput[2]);
-    analysis.auxoutput[dftsize + 1] = std::conj(analysis.auxoutput[dftsize - 1]);
+    const size_t auxoffset[] = { kernelsize, kernelsize + (dftsize - 1) };
 
-    for (size_t i = analysis.roi.first, j = i + 1; i < analysis.roi.second; ++i, ++j)
+    for (size_t i = 1; i <= kernelsize; ++i)
+    {
+      analysis.auxoutput[auxoffset[0] - i] = std::conj(analysis.auxoutput[auxoffset[0] + i]);
+      analysis.auxoutput[auxoffset[1] + i] = std::conj(analysis.auxoutput[auxoffset[1] - i]);
+    }
+
+    for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
     {
       dft[i] = window(analysis.auxoutput[j - 1],
                       analysis.auxoutput[j],
@@ -234,6 +239,7 @@ public:
 
 private:
 
+  const size_t kernelsize;
   const size_t dftsize;
 
   struct

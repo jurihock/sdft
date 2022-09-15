@@ -161,6 +161,7 @@ typedef struct sdft_plan_synthesis sdft_synthesis_t;
 
 struct sdft_plan
 {
+  sdft_size_t kernelsize;
   sdft_size_t dftsize;
   sdft_analysis_t analysis;
   sdft_synthesis_t synthesis;
@@ -353,6 +354,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
 {
   sdft_t* sdft = (sdft_t*)malloc(sizeof(sdft_t));
 
+  sdft->kernelsize = 2;
   sdft->dftsize = dftsize;
 
   sdft->analysis.weight = (sdft_fd_t)(1) / (dftsize * 2);
@@ -371,7 +373,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_double_t latency
   sdft->analysis.input = (sdft_td_t*)calloc(dftsize * 2, sizeof(sdft_td_t));
 
   sdft->analysis.accoutput = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + 2, sizeof(sdft_fdx_t));
+  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft->kernelsize * 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < dftsize; ++i)
@@ -462,7 +464,7 @@ void sdft_reset(sdft_t* sdft)
 
   memset(sdft->analysis.input, 0, (sdft->dftsize * 2) * sizeof(sdft_td_t));
   memset(sdft->analysis.accoutput, 0, (sdft->dftsize) * sizeof(sdft_fdx_t));
-  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + 2) * sizeof(sdft_fdx_t));
+  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + sdft->kernelsize * 2) * sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < sdft->dftsize; ++i)
   {
@@ -501,7 +503,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor = 0;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
@@ -512,7 +514,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor += 1;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
@@ -520,10 +522,15 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     }
   }
 
-  sdft->analysis.auxoutput[0] = sdft_etc_conj(sdft->analysis.auxoutput[2]);
-  sdft->analysis.auxoutput[sdft->dftsize + 1] = sdft_etc_conj(sdft->analysis.auxoutput[sdft->dftsize - 1]);
+  const sdft_size_t auxoffset[] = { sdft->kernelsize, sdft->kernelsize + (sdft->dftsize - 1) };
 
-  for (sdft_size_t i = sdft->analysis.roi.first, j = i + 1; i < sdft->analysis.roi.second; ++i, ++j)
+  for (sdft_size_t i = 1; i <= sdft->kernelsize; ++i)
+  {
+    sdft->analysis.auxoutput[auxoffset[0] - i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[0] + i]);
+    sdft->analysis.auxoutput[auxoffset[1] + i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[1] - i]);
+  }
+
+  for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft->kernelsize; i < sdft->analysis.roi.second; ++i, ++j)
   {
     dft[i] = sdft_etc_window(sdft->analysis.auxoutput[j - 1],
                              sdft->analysis.auxoutput[j],
