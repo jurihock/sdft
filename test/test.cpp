@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   const char* wavfile = argv[5];
   const char* dftfile = argv[6];
 
-  SDFT<> sdft(dftsize, getwindow(window));
+  SDFT<> sdft(dftsize, getwindow(window), 1);
 
   float* input;
   size_t size;
