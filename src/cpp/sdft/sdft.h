@@ -44,7 +44,8 @@ public:
   {
     Boxcar,
     Hann,
-    Hamming
+    Hamming,
+    Blackman
   };
 
   /**
@@ -300,18 +301,25 @@ private:
     {
       case SDFT::Window::Hann:
       {
-        const std::complex<F> x = values[kernelsize] + values[kernelsize];
-        const std::complex<F> y = values[kernelsize - 1] + values[kernelsize + 1];
-        const std::complex<F> z = x - y;
+        const std::complex<F> a = values[kernelsize] + values[kernelsize];
+        const std::complex<F> b = values[kernelsize - 1] + values[kernelsize + 1];
 
-        return F(0.25) * weight * (x - y);
+        return F(0.25) * weight * (a - b);
       }
       case SDFT::Window::Hamming:
       {
-        const std::complex<F> x = F(0.54) * values[kernelsize];
-        const std::complex<F> y = F(0.23) * (values[kernelsize - 1] + values[kernelsize + 1]);
+        const std::complex<F> a = F(0.54) * values[kernelsize];
+        const std::complex<F> b = F(0.23) * (values[kernelsize - 1] + values[kernelsize + 1]);
 
-        return weight * (x - y);
+        return weight * (a - b);
+      }
+      case SDFT::Window::Blackman:
+      {
+        const std::complex<F> a = F(0.42) * values[kernelsize];
+        const std::complex<F> b = F(0.25) * (values[kernelsize - 1] + values[kernelsize + 1]);
+        const std::complex<F> c = F(0.04) * (values[kernelsize - 2] + values[kernelsize + 2]);
+
+        return weight * (a - b + c);
       }
       default:
       {

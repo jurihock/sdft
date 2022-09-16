@@ -128,7 +128,8 @@ enum sdft_window
 {
   sdft_window_boxcar,
   sdft_window_hann,
-  sdft_window_hamming
+  sdft_window_hamming,
+  sdft_window_blackman
 };
 
 typedef enum sdft_window sdft_window_t;
@@ -352,17 +353,25 @@ sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t windo
   {
     case sdft_window_hann:
     {
-      const sdft_fdx_t x = sdft_etc_add(values[sdft_kernel_size], values[sdft_kernel_size]);
-      const sdft_fdx_t y = sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]);
+      const sdft_fdx_t a = sdft_etc_add(values[sdft_kernel_size], values[sdft_kernel_size]);
+      const sdft_fdx_t b = sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]);
 
-      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, sdft_etc_sub(x, y));
+      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, sdft_etc_sub(a, b));
     }
     case sdft_window_hamming:
     {
-      const sdft_fdx_t x = sdft_etc_mul_real((sdft_fd_t)(0.54), values[sdft_kernel_size]);
-      const sdft_fdx_t y = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
+      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.54), values[sdft_kernel_size]);
+      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
 
-      return sdft_etc_mul_real(weight, sdft_etc_sub(x, y));
+      return sdft_etc_mul_real(weight, sdft_etc_sub(a, b));
+    }
+    case sdft_window_blackman:
+    {
+      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.42), values[sdft_kernel_size]);
+      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.25), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
+      const sdft_fdx_t c = sdft_etc_mul_real((sdft_fd_t)(0.04), sdft_etc_add(values[sdft_kernel_size - 2], values[sdft_kernel_size + 2]));
+
+      return sdft_etc_mul_real(weight, sdft_etc_add(sdft_etc_sub(a, b), c));
     }
     default:
     {

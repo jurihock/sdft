@@ -18,6 +18,11 @@ SDFT<>::Window getwindow(const char* window)
     return SDFT<>::Window::Hamming;
   }
 
+  if (!strcmp(window, "blackman"))
+  {
+    return SDFT<>::Window::Blackman;
+  }
+
   return SDFT<>::Window::Boxcar;
 }
 

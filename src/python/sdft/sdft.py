@@ -157,9 +157,9 @@ class SDFT:
                 x,
                 numpy.conj(x[:,-2][:,None])))
 
+            middle = y[:, +1:-1]
             left = y[:, :-2]
             right = y[:, +2:]
-            middle = y[:, +1:-1]
 
             return (0.5 * middle - 0.25 * (left + right)) / N
 
@@ -170,10 +170,27 @@ class SDFT:
                 x,
                 numpy.conj(x[:,-2][:,None])))
 
+            middle = y[:, +1:-1]
             left = y[:, :-2]
             right = y[:, +2:]
-            middle = y[:, +1:-1]
 
             return (0.54 * middle - 0.23 * (left + right)) / N
+
+        if str(self.window).lower() in 'blackman':
+
+            y = numpy.hstack((
+                numpy.conj(x[:,+2][:,None]),
+                numpy.conj(x[:,+1][:,None]),
+                x,
+                numpy.conj(x[:,-2][:,None]),
+                numpy.conj(x[:,-3][:,None])))
+
+            middle = y[:, +2:-2]
+            left0 = y[:, +1:-3]
+            right0 = y[:, +3:-1]
+            left1 = y[:, :-4]
+            right1 = y[:, +4:]
+
+            return (0.42 * middle - 0.25 * (left0 + right0) + 0.04 * (left1 + right1)) / N
 
         return x / N
