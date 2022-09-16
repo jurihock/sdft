@@ -44,7 +44,7 @@ def main():
         for key, val in dftfiles.items()
     }
 
-    ref = stft(x, dftsize * 2, hopsize)
+    ref = stft(x, dftsize * 2, hopsize, window)
 
     # check wavs
 

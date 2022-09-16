@@ -144,13 +144,15 @@ class SDFT:
         Window the specified DFT matrix.
         """
 
+        window = str(self.window).lower()
+
         x = numpy.atleast_2d(x)
 
         assert x.ndim == 2, f'Expected 2D array (samples,frequencies), got {x.shape}!'
 
         M, N = x.shape
 
-        if str(self.window).lower() in 'hann':
+        if window in 'hann':
 
             y = numpy.hstack((
                 numpy.conj(x[:,+1][:,None]),
@@ -158,12 +160,12 @@ class SDFT:
                 numpy.conj(x[:,-2][:,None])))
 
             middle = y[:, +1:-1]
-            left = y[:, :-2]
-            right = y[:, +2:]
+            left1  = y[:,   :-2]
+            right1 = y[:, +2:  ]
 
-            return (0.5 * middle - 0.25 * (left + right)) / N
+            return (0.5 * middle - 0.25 * (left1 + right1)) / N
 
-        if str(self.window).lower() in 'hamming':
+        if window in 'hamming':
 
             y = numpy.hstack((
                 numpy.conj(x[:,+1][:,None]),
@@ -171,12 +173,12 @@ class SDFT:
                 numpy.conj(x[:,-2][:,None])))
 
             middle = y[:, +1:-1]
-            left = y[:, :-2]
-            right = y[:, +2:]
+            left1  = y[:,   :-2]
+            right1 = y[:, +2:  ]
 
-            return (0.54 * middle - 0.23 * (left + right)) / N
+            return (0.54 * middle - 0.23 * (left1 + right1)) / N
 
-        if str(self.window).lower() in 'blackman':
+        if window in 'blackman':
 
             y = numpy.hstack((
                 numpy.conj(x[:,+2][:,None]),
@@ -186,11 +188,11 @@ class SDFT:
                 numpy.conj(x[:,-3][:,None])))
 
             middle = y[:, +2:-2]
-            left0 = y[:, +1:-3]
-            right0 = y[:, +3:-1]
-            left1 = y[:, :-4]
-            right1 = y[:, +4:]
+            left1  = y[:, +1:-3]
+            right1 = y[:, +3:-1]
+            left2  = y[:,   :-4]
+            right2 = y[:, +4:  ]
 
-            return (0.42 * middle - 0.25 * (left0 + right0) + 0.04 * (left1 + right1)) / N
+            return (0.42 * middle - 0.25 * (left1 + right1) + 0.04 * (left2 + right2)) / N
 
         return x / N
