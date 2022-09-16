@@ -87,7 +87,7 @@ float* y = ...; // synthesis samples of shape (n)
 
 std::complex<double>* dft = ...; // dft matrix of shape (n, m)
 
-SDFT<float, double> sdft(m); // create sdft plan for specific time and frequency domain data type
+SDFT<float, double> sdft(m); // create sdft plan for custom time and frequency domain data types
 
 sdft.sdft(n, x, dft); // extract dft matrix from input samples
 sdft.isdft(n, dft, y); // synthesize output samples from dft matrix
