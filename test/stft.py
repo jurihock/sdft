@@ -3,7 +3,7 @@ import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def stft(samples, framesize, hopsize, window=None):
+def stft(samples, framesize, hopsize, window='hann', shift=False):
 
     frames = sliding_window_view(samples, framesize, writeable=False)[::hopsize]
 
@@ -15,12 +15,12 @@ def stft(samples, framesize, hopsize, window=None):
 
     for i, frame in enumerate(frames):
 
-        dfts[i] = numpy.fft.rfft(w * frame, norm='forward')
+        dfts[i] = fft(w * frame, shift)
 
     return dfts
 
 
-def istft(dfts, framesize, hopsize, window=None):
+def istft(dfts, framesize, hopsize, window='hann', shift=False):
 
     N, M = dfts.shape
 
@@ -33,12 +33,34 @@ def istft(dfts, framesize, hopsize, window=None):
 
     for i, dft in enumerate(dfts):
 
-        frames[i] += w * numpy.fft.irfft(dft, norm='forward')
+        frames[i] += w * ifft(dft, shift)
 
     return samples
 
 
-def weights(size, window=None):
+def fft(data, shift=False):
+
+    if shift:
+
+        return numpy.fft.rfft(numpy.fft.fftshift(data), norm='forward')
+
+    else:
+
+        return numpy.fft.rfft(data, norm='forward')
+
+
+def ifft(data, shift=False):
+
+    if shift:
+
+        return numpy.fft.fftshift(numpy.fft.irfft(data, norm='forward'))
+
+    else:
+
+        return numpy.fft.irfft(data, norm='forward')
+
+
+def weights(size, window='hann'):
 
     window = str(window).lower()
 
