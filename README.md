@@ -7,7 +7,7 @@
 Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with following features:
 
 - Arbitrary number of DFT bins
-- Built-in analysis window functions Boxcar, Hann, Hamming and Blackman
+- Built-in analysis window functions Boxcar, Hann (default), Hamming and Blackman
 - Customizable time and frequency domain data type in C/C++
 - Endless single or multiple sample processing at once
 - Optional synthesis latency control parameter
