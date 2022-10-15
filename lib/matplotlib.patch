@@ -1,5 +1,5 @@
 diff --git a/matplotlibcpp.h b/matplotlibcpp.h
-index d95d46a..16aa557 100644
+index d95d46a..031690e 100644
 --- a/matplotlibcpp.h
 +++ b/matplotlibcpp.h
 @@ -11,6 +11,7 @@
@@ -97,7 +97,62 @@ index d95d46a..16aa557 100644
  #ifdef WITH_OPENCV
  void imshow(const cv::Mat &image, const std::map<std::string, std::string> &keywords = {})
  {
-@@ -2025,6 +2068,25 @@ inline void set_aspect_equal()
+@@ -1847,7 +1890,7 @@ void text(Numeric x, Numeric y, const std::string& s = "")
+     Py_DECREF(res);
+ }
+
+-inline void colorbar(PyObject* mappable = NULL, const std::map<std::string, float>& keywords = {})
++inline void colorbar(PyObject* mappable = NULL, const std::map<std::string, float>& keywords = {}, PyObject** out = nullptr)
+ {
+     if (mappable == NULL)
+         throw std::runtime_error("Must call colorbar with PyObject* returned from an image, contour, surface, etc.");
+@@ -1864,14 +1907,43 @@ inline void colorbar(PyObject* mappable = NULL, const std::map<std::string, floa
+     }
+
+     PyObject* res = PyObject_Call(detail::_interpreter::get().s_python_function_colorbar, args, kwargs);
+-    if(!res) throw std::runtime_error("Call to colorbar() failed.");
++    Py_DECREF(args);
++    Py_DECREF(kwargs);
++    if (!res)
++        throw std::runtime_error("Call to colorbar() failed.");
++    if (out)
++        *out = res;
++    else
++        Py_DECREF(res);
++}
++
++inline void colorbar_set_label(PyObject* colorbar, const std::string& value)
++{
++    PyObject* set_label = PyObject_GetAttrString(colorbar, "set_label");
++
++    if (!set_label)
++      throw std::runtime_error("Attribute set_label not found.");
++
++    Py_INCREF(set_label);
++
++    PyObject* args = PyTuple_New(1);
++    PyObject* kwargs = PyDict_New();
++
++    PyTuple_SetItem(args, 0, PyUnicode_FromString(value.c_str()));
++
++    PyObject* res = PyObject_Call(set_label, args, kwargs);
+
+     Py_DECREF(args);
+     Py_DECREF(kwargs);
++
++    Py_DECREF(set_label);
++
++    if (!res)
++      throw std::runtime_error("Call colorbar set_label failed.");
++
+     Py_DECREF(res);
+ }
+
+-
+ inline long figure(long number = -1)
+ {
+     detail::_interpreter::get();
+@@ -2025,6 +2097,25 @@ inline void set_aspect_equal()
      Py_DECREF(kwargs);
  }
 
@@ -123,7 +178,7 @@ index d95d46a..16aa557 100644
  template<typename Numeric>
  void ylim(Numeric left, Numeric right)
  {
-@@ -2093,6 +2155,20 @@ inline std::array<double, 2> ylim()
+@@ -2093,6 +2184,20 @@ inline std::array<double, 2> ylim()
      return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
  }
 

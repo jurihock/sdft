@@ -74,14 +74,22 @@ int main()
   };
 
   PyObject* imshow;
+  PyObject* colorbar;
+
   plot::imshow(db.transpose().data(), m, n, 1, args, &imshow);
-  plot::colorbar(imshow);
+  plot::colorbar(imshow, {}, &colorbar);
+
+  plot::xlabel("s");
+  plot::ylabel("Hz");
+  plot::colorbar_set_label(colorbar, "dB");
 
   plot::ylim(0, 5000);
   plot::clim(-120, 0);
 
   plot::show();
   plot::close();
+
+  Py_DECREF(colorbar);
   Py_DECREF(imshow);
 
   return 0;
