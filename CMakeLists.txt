@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1...3.18)
+cmake_minimum_required(VERSION 3.12...3.18)
 
 project(sdft)
 
@@ -14,3 +14,14 @@ include("${CMAKE_CURRENT_LIST_DIR}/src/cpp/sdft/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/lib/cpm.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/lib/dr.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/test/CMakeLists.txt")
+
+include("${CMAKE_CURRENT_LIST_DIR}/lib/python.cmake")
+
+if(Python3_FOUND AND Python3_NumPy_FOUND)
+
+  include("${CMAKE_CURRENT_LIST_DIR}/lib/matplotlib.cmake")
+  include("${CMAKE_CURRENT_LIST_DIR}/lib/numcpp.cmake")
+
+  include("${CMAKE_CURRENT_LIST_DIR}/examples/CMakeLists.txt")
+
+endif()
