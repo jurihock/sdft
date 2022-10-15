@@ -17,7 +17,7 @@ foreach(XXX c cpp)
     PRIVATE "${CMAKE_CURRENT_LIST_DIR}")
 
   target_link_libraries(${PROJECT_NAME}
-    PRIVATE sdft::${XXX} dr_libs)
+    PRIVATE sdft::${XXX} dr)
 
   if (MSVC)
     target_compile_options(${PROJECT_NAME}
