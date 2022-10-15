@@ -41,7 +41,12 @@ def main():
         db = 20 * np.log10(np.abs(dft))
 
     roi = (0, n / sr, 0, sr / 2)
-    args = dict(extent=roi, origin='lower', aspect='auto', cmap='inferno', interpolation='nearest')
+
+    args = dict(extent=roi,
+                origin='lower',
+                aspect='auto',
+                cmap='inferno',
+                interpolation='nearest')
 
     plot.imshow(db.T, **args)
     cbar = plot.colorbar()
