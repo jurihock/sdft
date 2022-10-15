@@ -58,8 +58,15 @@ int main()
 
   const auto db = 20. * nc::log10(nc::abs(dft));
 
+  const std::string roi =
+    std::to_string(0)       + "," +
+    std::to_string(n / sr)  + "," +
+    std::to_string(0)       + "," +
+    std::to_string(sr / 2);
+
   const std::map<std::string, std::string> args =
   {
+    { "extent", roi },
     { "origin", "lower" },
     { "aspect", "auto" },
     { "cmap", "inferno" },
@@ -70,7 +77,7 @@ int main()
   plot::imshow(db.transpose().data(), m, n, 1, args, &imshow);
   plot::colorbar(imshow);
 
-  plot::ylim(0, 5000 * m / (sr / 2));
+  plot::ylim(0, 5000);
   plot::clim(-120, 0);
 
   plot::show();

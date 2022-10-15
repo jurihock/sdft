@@ -1,8 +1,16 @@
 diff --git a/matplotlibcpp.h b/matplotlibcpp.h
-index d95d46a..c87a422 100644
+index d95d46a..16aa557 100644
 --- a/matplotlibcpp.h
 +++ b/matplotlibcpp.h
-@@ -73,6 +73,7 @@ struct _interpreter {
+@@ -11,6 +11,7 @@
+ #include <algorithm>
+ #include <stdexcept>
+ #include <iostream>
++#include <sstream>
+ #include <cstdint> // <cstdint> requires c++11 support
+ #include <functional>
+ #include <string> // std::stod
+@@ -73,6 +74,7 @@ struct _interpreter {
      PyObject *s_python_function_ion;
      PyObject *s_python_function_ginput;
      PyObject *s_python_function_ylim;
@@ -10,7 +18,7 @@ index d95d46a..c87a422 100644
      PyObject *s_python_function_title;
      PyObject *s_python_function_axis;
      PyObject *s_python_function_axhline;
-@@ -247,6 +248,7 @@ private:
+@@ -247,6 +249,7 @@ private:
          s_python_function_legend = safe_import(pymod, "legend");
          s_python_function_xlim = safe_import(pymod, "xlim");
          s_python_function_ylim = safe_import(pymod, "ylim");
@@ -18,7 +26,7 @@ index d95d46a..c87a422 100644
          s_python_function_title = safe_import(pymod, "title");
          s_python_function_axis = safe_import(pymod, "axis");
          s_python_function_axhline = safe_import(pymod, "axhline");
-@@ -350,10 +352,10 @@ template <> struct select_npy_type<uint64_t> { const static NPY_TYPES type = NPY
+@@ -350,10 +353,10 @@ template <> struct select_npy_type<uint64_t> { const static NPY_TYPES type = NPY
 
  // Sanity checks; comment them out or change the numpy type below if you're compiling on
  // a platform where they don't apply
@@ -33,7 +41,51 @@ index d95d46a..c87a422 100644
 
  template<typename Numeric>
  PyObject* get_array(const std::vector<Numeric>& v)
-@@ -957,6 +959,11 @@ inline void imshow(const float *ptr, const int rows, const int columns, const in
+@@ -931,7 +934,42 @@ inline void imshow(void *ptr, const NPY_TYPES type, const int rows, const int co
+     PyObject* kwargs = PyDict_New();
+     for(std::map<std::string, std::string>::const_iterator it = keywords.begin(); it != keywords.end(); ++it)
+     {
+-        PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
++        if (it->first == "extent")
++        {
++            const auto split = [](const std::string& value, const char delimiter)
++            {
++              std::vector<std::string> values;
++
++              std::stringstream lines(value);
++              std::string line;
++
++              while (std::getline(lines, line, delimiter))
++              {
++                values.push_back(line);
++              }
++
++              return values;
++            };
++
++            const auto values = split(it->second, ',');
++
++            PyObject* extent = PyList_New(4);
++
++            for (size_t i = 0; i < (std::min)(values.size(), size_t(4)); ++i)
++            {
++                const double value = std::stod(values.at(i));
++
++                PyList_SetItem(extent, i, PyFloat_FromDouble(value));
++            }
++
++            PyDict_SetItemString(kwargs, "extent", extent);
++
++            Py_DECREF(extent);
++        }
++        else
++        {
++            PyDict_SetItemString(kwargs, it->first.c_str(), PyUnicode_FromString(it->second.c_str()));
++        }
+     }
+
+     PyObject *res = PyObject_Call(detail::_interpreter::get().s_python_function_imshow, args, kwargs);
+@@ -957,6 +995,11 @@ inline void imshow(const float *ptr, const int rows, const int columns, const in
      detail::imshow((void *) ptr, NPY_FLOAT, rows, columns, colors, keywords, out);
  }
 
@@ -45,7 +97,7 @@ index d95d46a..c87a422 100644
  #ifdef WITH_OPENCV
  void imshow(const cv::Mat &image, const std::map<std::string, std::string> &keywords = {})
  {
-@@ -2025,6 +2032,25 @@ inline void set_aspect_equal()
+@@ -2025,6 +2068,25 @@ inline void set_aspect_equal()
      Py_DECREF(kwargs);
  }
 
@@ -71,7 +123,7 @@ index d95d46a..c87a422 100644
  template<typename Numeric>
  void ylim(Numeric left, Numeric right)
  {
-@@ -2093,6 +2119,20 @@ inline std::array<double, 2> ylim()
+@@ -2093,6 +2155,20 @@ inline std::array<double, 2> ylim()
      return { PyFloat_AsDouble(left), PyFloat_AsDouble(right) };
  }
 
