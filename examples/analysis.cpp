@@ -1,6 +1,3 @@
-#include <cmath>
-#include <map>
-
 #include <sdft/sdft.h>
 
 #include <matplotlibcpp.h>
