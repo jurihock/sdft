@@ -1,9 +1,9 @@
 #include <sdft/sdft.h>
 
-#include <matplotlibcpp.h>
+#include <matplotlibcpp17/pyplot.h>
 #include <NumCpp.hpp>
 
-namespace plot = matplotlibcpp;
+namespace py = pybind11;
 
 const double pi = std::acos(-1.);
 
@@ -30,6 +30,9 @@ nc::NdArray<double> phase(const nc::NdArray<double>& t, const double f)
 
 int main()
 {
+  py::scoped_interpreter guard{};
+
+
   // 1) generate input signal
 
   const auto sr = 44100;  // sample rate in Hz
@@ -58,39 +61,28 @@ int main()
 
   const auto db = 20. * nc::log10(nc::abs(dft));
 
-  const std::string roi =
-    std::to_string(0)       + "," +
-    std::to_string(n / sr)  + "," +
-    std::to_string(0)       + "," +
-    std::to_string(sr / 2);
+  auto plot = matplotlibcpp17::pyplot::import();
 
-  const std::map<std::string, std::string> args =
-  {
-    { "extent", roi },
-    { "origin", "lower" },
-    { "aspect", "auto" },
-    { "cmap", "inferno" },
-    { "interpolation", "nearest" }
-  };
+  auto data = nc::pybindInterface::nc2pybind(db.transpose());
 
-  PyObject* imshow;
-  PyObject* colorbar;
+  plot.imshow(Args(data), Kwargs(
+    "extent"_a = py::make_tuple(0, n / sr, 0, sr / 2),
+    "origin"_a = "lower",
+    "aspect"_a = "auto",
+    "cmap"_a = "inferno",
+    "interpolation"_a = "nearest"));
 
-  plot::imshow(db.transpose().data(), m, n, 1, args, &imshow);
-  plot::colorbar(imshow, {}, &colorbar);
+  auto cbar = plot.colorbar();
 
-  plot::xlabel("s");
-  plot::ylabel("Hz");
-  plot::colorbar_set_label(colorbar, "dB");
+  plot.xlabel(py::make_tuple("s"));
+  plot.ylabel(py::make_tuple("Hz"));
 
-  plot::ylim(0, 5000);
-  plot::clim(-120, 0);
+  // TODO: cbar.set_label("dB");
 
-  plot::show();
-  plot::close();
+  plot.ylim(py::make_tuple(0, 5000));
+  plot.clim(py::make_tuple(-120, 0));
 
-  Py_DECREF(colorbar);
-  Py_DECREF(imshow);
+  plot.show();
 
 
   return 0;

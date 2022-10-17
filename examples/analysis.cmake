@@ -6,7 +6,7 @@ target_sources(${PROJECT_NAME}
   PRIVATE "${CMAKE_CURRENT_LIST_DIR}/analysis.cpp")
 
 target_link_libraries(${PROJECT_NAME}
-  PRIVATE sdft::cpp matplotlib numcpp python)
+  PRIVATE sdft::cpp matplotlibcpp numcpp pybind python)
 
 if (MSVC)
   target_compile_options(${PROJECT_NAME}

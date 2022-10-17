@@ -15,9 +15,12 @@ if(numcpp_ADDED)
     INTERFACE "${numcpp_SOURCE_DIR}/include")
 
   target_compile_features(numcpp
-    INTERFACE cxx_std_17)
+    INTERFACE cxx_std_14)
 
   target_compile_definitions(numcpp
     INTERFACE -DNUMCPP_NO_USE_BOOST)
+
+  target_compile_definitions(numcpp
+    INTERFACE -DNUMCPP_INCLUDE_PYBIND_PYTHON_INTERFACE)
 
 endif()
