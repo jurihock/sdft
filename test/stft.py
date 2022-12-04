@@ -74,7 +74,7 @@ def weights(size, window='hann'):
 
     if window in 'blackman':
 
-        return 0.42 - 0.5 * numpy.cos(2 * numpy.pi * numpy.arange(size) / size) \
+        return 0.42 - 0.5  * numpy.cos(2 * numpy.pi * numpy.arange(size) / size) \
                     + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(size) / size)
 
     return numpy.ones(size)

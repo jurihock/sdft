@@ -11,18 +11,18 @@ from wav import readwav, writewav
 
 def main():
 
-    if len(sys.argv) < 7:
+    if len(sys.argv) < 8:
         exit(1)
 
     dftsize = int(sys.argv[1])
     hopsize = int(sys.argv[2])
     window = sys.argv[3]
+    latency = int(sys.argv[4]) if sys.argv[4] != 'nan' else None
+    srcfile = sys.argv[5]
+    wavfile = sys.argv[6]
+    dftfile = sys.argv[7]
 
-    srcfile = sys.argv[4]
-    wavfile = sys.argv[5]
-    dftfile = sys.argv[6]
-
-    sdft = SDFT(dftsize, window, 1)
+    sdft = SDFT(dftsize, window, latency)
 
     x, sr = readwav(srcfile)
     size = x.size

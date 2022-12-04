@@ -26,9 +26,19 @@ sdft_window_t getwindow(const char* window)
   return sdft_window_boxcar;
 }
 
+double getlatency(const char* latency)
+{
+  if (!strcmp(latency, "nan"))
+  {
+    return NAN;
+  }
+
+  return atoi(latency);
+}
+
 int main(int argc, char* argv[])
 {
-  if (argc < 7)
+  if (argc < 8)
   {
     return 1;
   }
@@ -36,12 +46,12 @@ int main(int argc, char* argv[])
   const size_t dftsize = atoi(argv[1]);
   const size_t hopsize = atoi(argv[2]);
   const char* window = argv[3];
+  const char* latency = argv[4];
+  const char* srcfile = argv[5];
+  const char* wavfile = argv[6];
+  const char* dftfile = argv[7];
 
-  const char* srcfile = argv[4];
-  const char* wavfile = argv[5];
-  const char* dftfile = argv[6];
-
-  sdft_t* sdft = sdft_alloc_custom(dftsize, getwindow(window), 1);
+  sdft_t* sdft = sdft_alloc_custom(dftsize, getwindow(window), getlatency(latency));
 
   float* input;
   size_t size;
