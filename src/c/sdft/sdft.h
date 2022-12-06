@@ -415,11 +415,6 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window,
   sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft_kernel_size * 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
-  for (sdft_size_t i = 0; i < dftsize; ++i)
-  {
-    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
-  }
-
   const sdft_fd_t omega = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
   const sdft_fd_t weight = (sdft_fd_t)(+2) / ((sdft_fd_t)(1) - sdft_etc_cos(omega * dftsize * latency));
 
@@ -427,6 +422,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window,
   {
     sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), omega * i);
     sdft->synthesis.twiddles[i] = sdft_etc_polar(weight, omega * i * dftsize * latency);
+    sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
   }
 
   return sdft;
