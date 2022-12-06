@@ -79,13 +79,13 @@ public:
     analysis.auxoutput.resize(dftsize + kernelsize * 2);
     analysis.fiddles.resize(dftsize, 1);
 
-    const F pi = F(-2) * std::acos(F(-1)) / (dftsize * 2);
-    const F weight = F(+2) / (F(1) - std::cos(pi * dftsize * latency));
+    const F omega = F(-2) * std::acos(F(-1)) / (dftsize * 2);
+    const F weight = F(+2) / (F(1) - std::cos(omega * dftsize * latency));
 
     for (size_t i = 0; i < dftsize; ++i)
     {
-      analysis.twiddles[i] = std::polar(F(1), pi * i);
-      synthesis.twiddles[i] = std::polar(weight, pi * i * dftsize * latency);
+      analysis.twiddles[i] = std::polar(F(1), omega * i);
+      synthesis.twiddles[i] = std::polar(weight, omega * i * dftsize * latency);
     }
   }
 
