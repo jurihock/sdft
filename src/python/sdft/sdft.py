@@ -27,7 +27,7 @@ class SDFT:
     Sliding Discrete Fourier Transform (SDFT).
     """
 
-    def __init__(self, dftsize, window='hann', latency=None):
+    def __init__(self, dftsize, window='hann', latency=1):
         """
         Create a new SDFT plan.
 
@@ -38,10 +38,9 @@ class SDFT:
         window : str, optional
             Analysis window type (boxcar, hann, hamming or blackman).
         latency : float, optional
-            Number of samples to perform time-shifting and thus affect the output latency.
-            The specified value can be a positive or a negative number.
-            The default value None disables latency compensation.
-            The special value 0 enables zero-latency output.
+            Synthesis latency factor between 0 and 1.
+            The default value 1 corresponds to the highest latency and best possible SNR.
+            A smaller value decreases both latency and SNR, but also increases the workload.
         """
 
         self.size = dftsize
@@ -52,10 +51,7 @@ class SDFT:
         self.delayline = numpy.zeros(dftsize * 2, float)
         self.accumulator = numpy.zeros(dftsize, complex)
 
-        self.omega = -2j * numpy.pi / (dftsize * 2)
-        self.twiddles = numpy.exp(self.omega * numpy.arange(dftsize))
-        self.timeshift = self.latency if self.latency else -(dftsize - 1) if self.latency == 0 else None
-        self.timeshift = numpy.exp(self.omega * numpy.arange(dftsize) * self.timeshift) if self.timeshift else None
+        self.twiddles = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
 
     def reset(self):
         """
@@ -108,9 +104,6 @@ class SDFT:
         numpy.copyto(self.accumulator, data[-1])
         data *= numpy.conj(twiddles[1:])
 
-        if self.timeshift is not None:
-            data *= self.timeshift[None, :]
-
         dfts = self.convolve(data)
 
         return dfts / 2
@@ -136,8 +129,13 @@ class SDFT:
 
         M, N = dfts.shape
 
-        twiddles = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(N)])
-        samples = numpy.sum(numpy.real(dfts * twiddles), axis=-1)
+        twiddles = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(N)]) \
+                   if self.latency == 1 else \
+                   numpy.exp(-1j * numpy.pi * self.latency * numpy.arange(N))
+
+        weight = 2 / (1 - numpy.cos(numpy.pi * self.latency))
+
+        samples = numpy.sum(numpy.real(dfts * twiddles * weight), axis=-1)
 
         return samples * 2
 

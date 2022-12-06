@@ -134,8 +134,6 @@ enum sdft_window
 
 typedef enum sdft_window sdft_window_t;
 
-const sdft_double_t sdft_latency_default = NAN;
-
 struct sdft_plan_roi
 {
   sdft_size_t first;
@@ -147,10 +145,10 @@ typedef struct sdft_plan_roi sdft_roi_t;
 struct sdft_plan_analysis
 {
   sdft_window_t window;
-  sdft_double_t latency;
 
   sdft_fd_t weight;
   sdft_roi_t roi;
+  sdft_fdx_t* twiddles;
 
   sdft_size_t cursor;
   sdft_size_t maxcursor;
@@ -158,19 +156,18 @@ struct sdft_plan_analysis
 
   sdft_fdx_t* accoutput;
   sdft_fdx_t* auxoutput;
-
-  sdft_fdx_t* twiddles;
   sdft_fdx_t* fiddles;
-
-  sdft_fdx_t* timeshift;
 };
 
 typedef struct sdft_plan_analysis sdft_analysis_t;
 
 struct sdft_plan_synthesis
 {
+  sdft_double_t latency;
+
   sdft_fd_t weight;
   sdft_roi_t roi;
+  sdft_fdx_t* twiddles;
 };
 
 typedef struct sdft_plan_synthesis sdft_synthesis_t;
@@ -387,22 +384,19 @@ sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t windo
  * Allocates a new SDFT plan.
  * @param dftsize Desired number of DFT bins.
  * @param window Analysis window type (boxcar, hann, hamming or blackman).
- * @param latency Number of samples to perform time-shifting and thus affect the output latency.
- *                The specified value can be a positive or a negative number.
- *                The default value NAN disables latency compensation.
- *                The special value 0 enables zero-latency output.
+ * @param latency Synthesis latency factor between 0 and 1.
+ *                The default value 1 corresponds to the highest latency and best possible SNR.
+ *                A smaller value decreases both latency and SNR, but also increases the workload.
  * @return SDFT plan instance.
  **/
 sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window, const sdft_double_t latency)
 {
-  const sdft_fd_t omega = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (sdft_fd_t)(dftsize * 2);
-
   sdft_t* sdft = (sdft_t*)malloc(sizeof(sdft_t));
 
   sdft->dftsize = dftsize;
 
   sdft->analysis.window = window;
-  sdft->analysis.latency = latency;
+  sdft->synthesis.latency = latency;
 
   sdft->analysis.weight = (sdft_fd_t)(1) / (dftsize * 2);
   sdft->synthesis.weight = (sdft_fd_t)(2);
@@ -410,43 +404,29 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window,
   sdft->analysis.roi = (sdft_roi_t){ 0, dftsize };
   sdft->synthesis.roi = (sdft_roi_t){ 0, dftsize };
 
+  sdft->analysis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
+  sdft->synthesis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
+
   sdft->analysis.cursor = 0;
   sdft->analysis.maxcursor = dftsize * 2 - 1;
   sdft->analysis.input = (sdft_td_t*)calloc(dftsize * 2, sizeof(sdft_td_t));
 
   sdft->analysis.accoutput = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft_kernel_size * 2, sizeof(sdft_fdx_t));
-
-  sdft->analysis.twiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-
-  if (isnormal(latency))
-  {
-    sdft->analysis.timeshift = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-
-    for (sdft_size_t i = 0; i < dftsize; ++i)
-    {
-      sdft->analysis.timeshift[i] = sdft_etc_polar((sdft_fd_t)(1), +omega * (sdft_fd_t)(i) * (sdft_fd_t)(latency));
-    }
-  }
-  else if (latency == 0)
-  {
-    sdft->analysis.timeshift = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-
-    for (sdft_size_t i = 0; i < dftsize; ++i)
-    {
-      sdft->analysis.timeshift[i] = sdft_etc_polar((sdft_fd_t)(1), -omega * (sdft_fd_t)(i) * (sdft_fd_t)(dftsize - 1));
-    }
-  }
-  else
-  {
-    sdft->analysis.timeshift = NULL;
-  }
 
   for (sdft_size_t i = 0; i < dftsize; ++i)
   {
-    sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), omega * (sdft_fd_t)(i));
     sdft->analysis.fiddles[i] = sdft_etc_complex(1, 0);
+  }
+
+  const sdft_fd_t pi = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
+  const sdft_fd_t weight = (sdft_fd_t)(+2) / ((sdft_fd_t)(1) - sdft_etc_cos(pi * dftsize * latency));
+
+  for (sdft_size_t i = 0; i < dftsize; ++i)
+  {
+    sdft->analysis.twiddles[i] = sdft_etc_polar((sdft_fd_t)(1), pi * i);
+    sdft->synthesis.twiddles[i] = sdft_etc_polar(weight, pi * i * dftsize * latency);
   }
 
   return sdft;
@@ -459,7 +439,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window,
  **/
 sdft_t* sdft_alloc(const sdft_size_t dftsize)
 {
-  return sdft_alloc_custom(dftsize, sdft_window_hann, sdft_latency_default);
+  return sdft_alloc_custom(dftsize, sdft_window_hann, 1);
 }
 
 /**
@@ -471,6 +451,18 @@ void sdft_free(sdft_t* sdft)
   if (sdft == NULL)
   {
     return;
+  }
+
+  if (sdft->analysis.twiddles != NULL)
+  {
+    free(sdft->analysis.twiddles);
+    sdft->analysis.twiddles = NULL;
+  }
+
+  if (sdft->synthesis.twiddles != NULL)
+  {
+    free(sdft->synthesis.twiddles);
+    sdft->synthesis.twiddles = NULL;
   }
 
   if (sdft->analysis.input != NULL)
@@ -491,22 +483,10 @@ void sdft_free(sdft_t* sdft)
     sdft->analysis.auxoutput = NULL;
   }
 
-  if (sdft->analysis.twiddles != NULL)
-  {
-    free(sdft->analysis.twiddles);
-    sdft->analysis.twiddles = NULL;
-  }
-
   if (sdft->analysis.fiddles != NULL)
   {
     free(sdft->analysis.fiddles);
     sdft->analysis.fiddles = NULL;
-  }
-
-  if (sdft->analysis.timeshift != NULL)
-  {
-    free(sdft->analysis.timeshift);
-    sdft->analysis.timeshift = NULL;
   }
 
   free(sdft);
@@ -549,11 +529,11 @@ sdft_window_t sdft_window(const sdft_t* sdft)
 }
 
 /**
- * Returns the assigned latency compensation factor.
+ * Returns the assigned synthesis latency factor.
  **/
 sdft_double_t sdft_latency(const sdft_t* sdft)
 {
-  return (sdft != NULL) ? sdft->analysis.latency : 0;
+  return (sdft != NULL) ? sdft->synthesis.latency : 0;
 }
 
 /**
@@ -574,7 +554,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
-      sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
+      sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i];
     }
   }
   else
@@ -586,14 +566,6 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
       sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
       sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
-    }
-  }
-
-  if (sdft->analysis.timeshift)
-  {
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
-    {
-      sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.auxoutput[j], sdft->analysis.timeshift[i]);
     }
   }
 
@@ -650,9 +622,19 @@ sdft_td_t sdft_isdft(sdft_t* sdft, const sdft_fdx_t* dft)
 {
   sdft_fd_t sample = (sdft_fd_t)(0);
 
-  for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+  if (sdft->synthesis.latency == 1)
   {
-    sample += sdft_etc_real(dft[i]) * (i % 2 ? -1 : +1);
+    for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    {
+      sample += sdft_etc_real(dft[i]) * (i % 2 ? -1 : +1);
+    }
+  }
+  else
+  {
+    for (sdft_size_t i = sdft->synthesis.roi.first; i < sdft->synthesis.roi.second; ++i)
+    {
+      sample += sdft_etc_real(sdft_etc_mul(dft[i], sdft->synthesis.twiddles[i]));
+    }
   }
 
   sample *= sdft->synthesis.weight;

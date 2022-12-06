@@ -23,7 +23,6 @@
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-#include <limits>
 #include <utility>
 #include <vector>
 
@@ -53,18 +52,15 @@ public:
    * Creates a new SDFT plan.
    * @param dftsize Desired number of DFT bins.
    * @param window Analysis window type (boxcar, hann, hamming or blackman).
-   * @param latency Number of samples to perform time-shifting and thus affect the output latency.
-   *                The specified value can be a positive or a negative number.
-   *                The default value NAN disables latency compensation.
-   *                The special value 0 enables zero-latency output.
+   * @param latency Synthesis latency factor between 0 and 1.
+   *                The default value 1 corresponds to the highest latency and best possible SNR.
+   *                A smaller value decreases both latency and SNR, but also increases the workload.
    **/
-  SDFT(const size_t dftsize, const SDFT::Window window = SDFT::Window::Hann, const double latency = std::numeric_limits<double>::quiet_NaN()) :
+  SDFT(const size_t dftsize, const SDFT::Window window = SDFT::Window::Hann, const double latency = 1) :
     dftsize(dftsize)
   {
-    const F omega = F(-2) * std::acos(F(-1)) / F(dftsize * 2);
-
     analysis.window = window;
-    analysis.latency = latency;
+    synthesis.latency = latency;
 
     analysis.weight = F(1) / (dftsize * 2);
     synthesis.weight = F(2);
@@ -72,43 +68,24 @@ public:
     analysis.roi = { 0, dftsize };
     synthesis.roi = { 0, dftsize };
 
+    analysis.twiddles.resize(dftsize);
+    synthesis.twiddles.resize(dftsize);
+
     analysis.cursor = 0;
     analysis.maxcursor = dftsize * 2 - 1;
     analysis.input.resize(dftsize * 2);
 
     analysis.accoutput.resize(dftsize);
     analysis.auxoutput.resize(dftsize + kernelsize * 2);
+    analysis.fiddles.resize(dftsize, 1);
 
-    analysis.twiddles.resize(dftsize);
-    analysis.fiddles.resize(dftsize);
-
-    if (std::isnormal(latency))
-    {
-      analysis.timeshift.resize(dftsize);
-
-      for (size_t i = 0; i < dftsize; ++i)
-      {
-        analysis.timeshift[i] = std::polar(F(1), +omega * F(i) * F(latency));
-      }
-    }
-    else if (latency == 0)
-    {
-      analysis.timeshift.resize(dftsize);
-
-      for (size_t i = 0; i < dftsize; ++i)
-      {
-        analysis.timeshift[i] = std::polar(F(1), -omega * F(i) * F(dftsize - 1));
-      }
-    }
-    else
-    {
-      analysis.timeshift.clear();
-    }
+    const F pi = F(-2) * std::acos(F(-1)) / (dftsize * 2);
+    const F weight = F(+2) / (F(1) - std::cos(pi * dftsize * latency));
 
     for (size_t i = 0; i < dftsize; ++i)
     {
-      analysis.twiddles[i] = std::polar(F(1), omega * F(i));
-      analysis.fiddles[i] = 1;
+      analysis.twiddles[i] = std::polar(F(1), pi * i);
+      synthesis.twiddles[i] = std::polar(weight, pi * i * dftsize * latency);
     }
   }
 
@@ -141,11 +118,11 @@ public:
   }
 
   /**
-   * Returns the assigned latency compensation factor.
+   * Returns the assigned synthesis latency factor.
    **/
   double latency() const
   {
-    return analysis.latency;
+    return synthesis.latency;
   }
 
   /**
@@ -165,7 +142,7 @@ public:
       {
         analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
         analysis.fiddles[i]   = 1;
-        analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
+        analysis.auxoutput[j] = analysis.accoutput[i];
       }
     }
     else
@@ -177,14 +154,6 @@ public:
         analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
         analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
         analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
-      }
-    }
-
-    if (!analysis.timeshift.empty())
-    {
-      for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
-      {
-        analysis.auxoutput[j] = analysis.auxoutput[j] * analysis.timeshift[i];
       }
     }
 
@@ -238,9 +207,19 @@ public:
   {
     F sample = F(0);
 
-    for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
+    if (synthesis.latency == 1)
     {
-      sample += dft[i].real() * (i % 2 ? -1 : +1);
+      for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
+      {
+        sample += dft[i].real() * (i % 2 ? -1 : +1);
+      }
+    }
+    else
+    {
+      for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
+      {
+        sample += (dft[i] * synthesis.twiddles[i]).real();
+      }
     }
 
     sample *= synthesis.weight;
@@ -284,10 +263,10 @@ private:
   struct
   {
     SDFT::Window window;
-    double latency;
 
     F weight;
     std::pair<size_t, size_t> roi;
+    std::vector<std::complex<F>> twiddles;
 
     size_t cursor;
     size_t maxcursor;
@@ -295,18 +274,17 @@ private:
 
     std::vector<std::complex<F>> accoutput;
     std::vector<std::complex<F>> auxoutput;
-
-    std::vector<std::complex<F>> twiddles;
     std::vector<std::complex<F>> fiddles;
-
-    std::vector<std::complex<F>> timeshift;
   }
   analysis;
 
   struct
   {
+    double latency;
+
     F weight;
     std::pair<size_t, size_t> roi;
+    std::vector<std::complex<F>> twiddles;
   }
   synthesis;
 
