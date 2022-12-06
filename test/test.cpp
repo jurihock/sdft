@@ -28,12 +28,7 @@ SDFT<>::Window getwindow(const char* window)
 
 double getlatency(const char* latency)
 {
-  if (!strcmp(latency, "nan"))
-  {
-    return NAN;
-  }
-
-  return atoi(latency);
+  return atof(latency);
 }
 
 int main(int argc, char *argv[])

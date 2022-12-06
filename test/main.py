@@ -15,7 +15,7 @@ def main():
     dftsize = int(sys.argv[1])
     hopsize = int(sys.argv[2])
     window = sys.argv[3]
-    latency = int(sys.argv[4]) if sys.argv[4] != 'nan' else None
+    latency = float(sys.argv[4])
     srcfile = sys.argv[5]
     wavfile = sys.argv[6]
     dftfile = sys.argv[7]

@@ -3,7 +3,7 @@
 set DFTSIZE=1000
 set HOPSIZE=100
 set WINDOW=hann
-set LATENCY=nan
+set LATENCY=1
 
 set BUILD=..\build-release
 
