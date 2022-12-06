@@ -3,7 +3,7 @@
 DFTSIZE=1000
 HOPSIZE=100
 WINDOW=hann
-LATENCY=nan
+LATENCY=1
 
 BUILD=../build-release
 

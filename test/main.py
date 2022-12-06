@@ -3,7 +3,7 @@ import os
 import sys
 
 from plot import spectrogram, figure, show
-from stft import stft
+from stft import STFT
 from wav import readwav
 
 
@@ -19,6 +19,8 @@ def main():
     srcfile = sys.argv[5]
     wavfile = sys.argv[6]
     dftfile = sys.argv[7]
+
+    framesize = dftsize * 2
 
     wavfiles = {
         'c':   f'{wavfile.format("c")}',
@@ -44,7 +46,14 @@ def main():
         for key, val in dftfiles.items()
     }
 
-    ref = stft(x, dftsize * 2, hopsize, window)
+    # emulate real-time delay of one frame
+
+    x = np.roll(x, framesize)
+    x[:framesize] = 0
+
+    # compute stft reference spectrogram
+
+    stft = STFT(framesize, hopsize, window).stft(x)
 
     # check wavs
 
@@ -64,7 +73,7 @@ def main():
 
     # plot spectrograms
 
-    figure('stft').spectrogram(ref, sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
+    figure('stft').spectrogram(stft, sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     figure('c').spectrogram(dfts['c'], sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     figure('py').spectrogram(dfts['py'], sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     show()

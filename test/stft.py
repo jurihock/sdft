@@ -3,78 +3,81 @@ import numpy
 from numpy.lib.stride_tricks import sliding_window_view
 
 
-def stft(samples, framesize, hopsize, window='hann', shift=False):
+class STFT:
 
-    frames = sliding_window_view(samples, framesize, writeable=False)[::hopsize]
+    def __init__(self, framesize, hopsize, window='hann', shift=False):
 
-    N, M = frames.shape
+        self.framesize = framesize
+        self.dftsize = numpy.fft.rfftfreq(framesize).size
+        self.hopsize = hopsize
+        self.window = window
+        self.shift = shift
 
-    dfts = numpy.zeros((N, M//2+1), complex)
+    def stft(self, samples):
 
-    w = weights(framesize, window)
+        samples = numpy.atleast_1d(samples)
 
-    for i, frame in enumerate(frames):
+        assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
-        dfts[i] = fft(w * frame, shift)
+        frames = sliding_window_view(samples, self.framesize, writeable=False)[::self.hopsize]
 
-    return dfts
+        M, N, W = frames.shape[0], self.dftsize, self.weights()
 
+        dfts = self.fft(frames * W)
 
-def istft(dfts, framesize, hopsize, window='hann', shift=False):
+        return dfts
 
-    N, M = dfts.shape
+    def istft(self, dfts):
 
-    samples = numpy.zeros((N * hopsize + framesize), float)
+        dfts = numpy.atleast_2d(dfts)
 
-    frames = sliding_window_view(samples, framesize, writeable=True)[::hopsize]
+        assert dfts.ndim == 2, f'Expected 2D array (samples,frequencies), got {dfts.shape}!'
 
-    w = weights(framesize, window)
-    w *= hopsize / numpy.sum(w**2)
+        M, W = dfts.shape[0] * self.hopsize + self.framesize, self.weights()
 
-    for i, dft in enumerate(dfts):
+        W *= self.hopsize / numpy.sum(W**2)
 
-        frames[i] += w * ifft(dft, shift)
+        samples = numpy.zeros((M), float)
 
-    return samples
+        frames = sliding_window_view(samples, self.framesize, writeable=True)[::self.hopsize]
+        frames += self.ifft(dft) * W
 
+        return samples
 
-def fft(data, shift=False):
+    def fft(self, data):
 
-    if shift:
+        if self.shift:
 
-        return numpy.fft.rfft(numpy.fft.fftshift(data), norm='forward')
+            data = numpy.fft.fftshift(data, axes=-1)
 
-    else:
+        return numpy.fft.rfft(data, axis=-1, norm='forward')
 
-        return numpy.fft.rfft(data, norm='forward')
+    def ifft(self, data):
 
+        data = numpy.fft.irfft(data, axis=-1, norm='forward')
 
-def ifft(data, shift=False):
+        if self.shift:
 
-    if shift:
+            return numpy.fft.ifftshift(data, axes=-1)
 
-        return numpy.fft.fftshift(numpy.fft.irfft(data, norm='forward'))
+        return data
 
-    else:
+    def weights(self):
 
-        return numpy.fft.irfft(data, norm='forward')
+        size = self.framesize
+        window = str(self.window).lower()
 
+        if window in 'hann':
 
-def weights(size, window='hann'):
+            return 0.5 - 0.5 * numpy.cos(2 * numpy.pi * numpy.arange(size) / size)
 
-    window = str(window).lower()
+        if window in 'hamming':
 
-    if window in 'hann':
+            return 0.54 - 0.46 * numpy.cos(2 * numpy.pi * numpy.arange(size) / size)
 
-        return 0.5 - 0.5 * numpy.cos(2 * numpy.pi * numpy.arange(size) / size)
+        if window in 'blackman':
 
-    if window in 'hamming':
+            return 0.42 - 0.5  * numpy.cos(2 * numpy.pi * numpy.arange(size) / size) \
+                        + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(size) / size)
 
-        return 0.54 - 0.46 * numpy.cos(2 * numpy.pi * numpy.arange(size) / size)
-
-    if window in 'blackman':
-
-        return 0.42 - 0.5  * numpy.cos(2 * numpy.pi * numpy.arange(size) / size) \
-                    + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(size) / size)
-
-    return numpy.ones(size)
+        return numpy.ones(size)
