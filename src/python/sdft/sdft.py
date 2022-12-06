@@ -51,7 +51,18 @@ class SDFT:
         self.delayline = numpy.zeros(dftsize * 2, float)
         self.accumulator = numpy.zeros(dftsize, complex)
 
-        self.twiddles = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
+        self.twiddles_analysis = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
+        self.twiddles_synthesis = numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
+
+        if self.latency == 1:
+
+            # circular shift in time domain or multiplication of each dft bin by (-1)**n
+            self.twiddles_synthesis = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(dftsize)])
+
+        else:
+
+            # amplitude "demodulation" in time domain
+            self.twiddles_synthesis *= 2 / (1 - numpy.cos(numpy.pi * latency))
 
     def reset(self):
         """
@@ -89,7 +100,7 @@ class SDFT:
 
         self.offset += M
 
-        twiddles = self.twiddles[None, :]
+        twiddles = self.twiddles_analysis[None, :]
         twiddles = numpy.repeat(twiddles, M + 1, axis=0)
         twiddles[0] **= m
         numpy.cumprod(twiddles, axis=0, out=twiddles)
@@ -127,15 +138,9 @@ class SDFT:
 
         assert dfts.ndim == 2, f'Expected 2D array (samples,frequencies), got {dfts.shape}!'
 
-        M, N = dfts.shape
+        twiddles = self.twiddles_synthesis
 
-        twiddles = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(N)]) \
-                   if self.latency == 1 else \
-                   numpy.exp(-1j * numpy.pi * self.latency * numpy.arange(N))
-
-        weight = 2 / (1 - numpy.cos(numpy.pi * self.latency))
-
-        samples = numpy.sum(numpy.real(dfts * twiddles * weight), axis=-1)
+        samples = numpy.sum(numpy.real(dfts * twiddles), axis=-1)
 
         return samples * 2
 
@@ -155,9 +160,9 @@ class SDFT:
         if window in 'hann':
 
             y = numpy.hstack((
-                numpy.conj(x[:,+1][:,None]),
+                numpy.conj(x[:, +1][:, None]),
                 x,
-                numpy.conj(x[:,-2][:,None])))
+                numpy.conj(x[:, -2][:, None])))
 
             middle = y[:, +1:-1]
             left1  = y[:,   :-2]
@@ -168,9 +173,9 @@ class SDFT:
         if window in 'hamming':
 
             y = numpy.hstack((
-                numpy.conj(x[:,+1][:,None]),
+                numpy.conj(x[:, +1][:, None]),
                 x,
-                numpy.conj(x[:,-2][:,None])))
+                numpy.conj(x[:, -2][:, None])))
 
             middle = y[:, +1:-1]
             left1  = y[:,   :-2]
@@ -181,11 +186,11 @@ class SDFT:
         if window in 'blackman':
 
             y = numpy.hstack((
-                numpy.conj(x[:,+2][:,None]),
-                numpy.conj(x[:,+1][:,None]),
+                numpy.conj(x[:, +2][:, None]),
+                numpy.conj(x[:, +1][:, None]),
                 x,
-                numpy.conj(x[:,-2][:,None]),
-                numpy.conj(x[:,-3][:,None])))
+                numpy.conj(x[:, -2][:, None]),
+                numpy.conj(x[:, -3][:, None])))
 
             middle = y[:, +2:-2]
             left1  = y[:, +1:-3]
