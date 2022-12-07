@@ -4,7 +4,7 @@ import sys
 
 from plot import spectrogram, figure, show
 from stft import STFT
-from wav import readwav
+from wav import readwav, writewav
 
 
 def main():
@@ -53,7 +53,12 @@ def main():
 
     # compute stft reference spectrogram
 
-    stft = STFT(framesize, hopsize, window).stft(x)
+    stft = STFT(framesize, hopsize, window)
+
+    stftx = stft.stft(x)
+    stfty = stft.istft(stftx)
+
+    writewav(f'{wavfile.format("stft")}', stfty, sr)
 
     # check wavs
 
@@ -73,7 +78,7 @@ def main():
 
     # plot spectrograms
 
-    figure('stft').spectrogram(stft, sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
+    figure('stft').spectrogram(stftx, sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     figure('c').spectrogram(dfts['c'], sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     figure('py').spectrogram(dfts['py'], sr, hopsize, xlim=(0, 7.9), ylim=(500, 15e3), yscale='log').tight()
     show()
