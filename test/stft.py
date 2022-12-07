@@ -38,8 +38,12 @@ class STFT:
 
         samples = numpy.zeros((N), float)
 
-        frames = sliding_window_view(samples, self.framesize, writeable=True)[::self.hopsize]
-        frames += self.ifft(dft) * W
+        frames0 = sliding_window_view(samples, self.framesize, writeable=True)[::self.hopsize]
+        frames1 = self.ifft(dfts) * W
+
+        for i in range(min(len(frames0), len(frames1))):
+
+            frames0[i] += frames1[i]
 
         return samples
 
