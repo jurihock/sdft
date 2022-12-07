@@ -1,12 +1,25 @@
 cff-version: 1.2.0
-title: >-
-  Single file forward and inverse Sliding DFT
-  in C, C++ and Python
+title: "Single file forward and inverse Sliding DFT in C, C++ and Python"
 authors:
   - family-names: Hock
     given-names: Juergen
 url: https://github.com/jurihock/sdft
+license: MIT
 type: software
 message: >-
   If you use this software, please cite it
   using the metadata from this file.
+references:
+  - title: "Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform"
+    authors:
+      - family-names: Duda
+        given-names: Krzysztof
+    doi: 10.1109/MSP.2010.938088
+    url: https://ieeexplore.ieee.org/document/5563098
+    type: article
+  - title: "Sliding is Smoother Than Jumping"
+    authors:
+      - family-names: Bradford
+        given-names: Russell
+    url: http://hdl.handle.net/2027/spo.bbp2372.2005.086
+    type: article
