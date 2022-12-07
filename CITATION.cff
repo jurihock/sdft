@@ -1,7 +1,6 @@
 cff-version: 1.4
 title: >-
   Single file forward and inverse Sliding DFT
-  in C, C++ and Python
 authors:
   - family-names: Hock
     given-names: Juergen
