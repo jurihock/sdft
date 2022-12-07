@@ -2,8 +2,11 @@ import numpy as np
 import os
 import sys
 
+sys.path.insert(0, os.path.join(
+    os.path.dirname(__file__), '..', 'src', 'python'))
+
 from plot import spectrogram, figure, show
-from stft import STFT
+from sdft import STFT
 from wav import readwav, writewav
 
 
