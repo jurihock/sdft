@@ -1,11 +1,39 @@
+"""
+Copyright (c) 2022 Juergen Hock
+
+SPDX-License-Identifier: MIT
+
+Short-Time Fourier Transform.
+
+Source: https://github.com/jurihock/sdft
+"""
+
+
 import numpy
 
 from numpy.lib.stride_tricks import sliding_window_view
 
 
 class STFT:
+    """
+    Short-Time Fourier Transform (STFT).
+    """
 
     def __init__(self, framesize, hopsize, window='hann', shift=False):
+        """
+        Create a new STFT plan.
+
+        Parameters
+        ----------
+        framesize : int
+            Buffer size in samples.
+        hopsize : int
+            Hop size in samples.
+        window : str, optional
+            Analysis window type (boxcar, hann, hamming or blackman).
+        shift : bool, optional
+            Enable circular shift.
+        """
 
         self.framesize = framesize
         self.hopsize = hopsize
@@ -13,6 +41,19 @@ class STFT:
         self.shift = shift
 
     def stft(self, samples):
+        """
+        Estimate the DFT matrix for the given sample array.
+
+        Parameters
+        ----------
+        samples : ndarray, list, float
+            Array of samples.
+
+        Returns
+        -------
+        dfts : ndarray
+            DFT matrix of shape (samples,frequencies).
+        """
 
         samples = numpy.atleast_1d(samples)
 
@@ -27,6 +68,19 @@ class STFT:
         return dfts
 
     def istft(self, dfts):
+        """
+        Synthesize the sample array from the given DFT matrix.
+
+        Parameters
+        ----------
+        dfts : ndarray
+            DFT matrix of shape (samples,frequencies).
+
+        Returns
+        -------
+        samples : ndarray
+            Array of samples.
+        """
 
         dfts = numpy.atleast_2d(dfts)
 
@@ -48,6 +102,9 @@ class STFT:
         return samples
 
     def fft(self, data):
+        """
+        Perform forward FFT.
+        """
 
         if self.shift:
 
@@ -56,6 +113,9 @@ class STFT:
         return numpy.fft.rfft(data, axis=-1, norm='forward')
 
     def ifft(self, data):
+        """
+        Perform backward FFT.
+        """
 
         data = numpy.fft.irfft(data, axis=-1, norm='forward')
 
@@ -66,6 +126,9 @@ class STFT:
         return data
 
     def weights(self):
+        """
+        Compute time-domain window coefficients.
+        """
 
         N, W = self.framesize, str(self.window).lower()
 
