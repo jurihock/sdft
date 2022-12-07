@@ -1,4 +1,4 @@
-cff-version: 1.4
+cff-version: 1.2.0
 title: >-
   Single file forward and inverse Sliding DFT
   in C, C++ and Python
