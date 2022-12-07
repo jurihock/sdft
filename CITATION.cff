@@ -1,0 +1,10 @@
+cff-version: 1.4
+title: "Single file forward and inverse Sliding DFT in C, C++ and Python"
+authors:
+  - family-names: "Hock"
+    given-names: "Juergen"
+url: "https://github.com/jurihock/sdft"
+type: software
+message: >-
+  If you use this software, please cite it
+  using the metadata from this file.
