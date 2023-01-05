@@ -2,8 +2,7 @@
 
 CPMAddPackage(
   NAME matplotlibcpp
-  VERSION 1.0.4
-  GIT_TAG bb9e692c1b48b83069e2bb0e17354098b841304f
+  VERSION 1.0.5
   GITHUB_REPOSITORY soblin/matplotlibcpp17
   DOWNLOAD_ONLY YES)
 

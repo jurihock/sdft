@@ -3,7 +3,7 @@
 CPMAddPackage(
   NAME numcpp
   VERSION 2.8.0
-  GIT_TAG "Version_2.8.0"
+  GIT_TAG Version_2.8.0
   GITHUB_REPOSITORY dpilger26/NumCpp
   DOWNLOAD_ONLY YES)
 

@@ -2,7 +2,7 @@
 
 CPMAddPackage(
   NAME pybind
-  VERSION 2.10.0
+  VERSION 2.10.3
   GITHUB_REPOSITORY pybind/pybind11
   DOWNLOAD_ONLY YES)
 
