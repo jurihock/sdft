@@ -124,6 +124,10 @@ Below you can see two spectrograms of the same audio file `test.wav` computed by
 
 Well, the results are very similar, which is to be considered as the proof of concept...
 
+# See also
+
+If you're interested in Sliding DFT with *logarithmic* frequency resolution, don't forget to browse my [jurihock/qdft](https://github.com/jurihock/qdft) project!
+
 ## References
 
 1. <span id="1">Krzysztof Duda (2010). Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform. IEEE Signal Processing Magazine. https://ieeexplore.ieee.org/document/5563098</span>
