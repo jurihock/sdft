@@ -126,7 +126,7 @@ Below you can see two spectrograms of the same audio file `test.wav` computed by
 
 Well, the results are very similar, which is to be considered as the proof of concept...
 
-# See also
+## See also
 
 If you're interested in Sliding DFT with *logarithmic* frequency resolution, don't forget to browse my [jurihock/qdft](https://github.com/jurihock/qdft) project!
 
