@@ -1,7 +1,11 @@
-from sdft import SDFT
+import os, sys
+src = os.path.join(os.path.dirname(__file__), '..', 'src', 'python')
+sys.path.insert(0, src)
 
 import matplotlib.pyplot as plot
 import numpy as np
+
+from sdft import SDFT
 
 
 def phase(t, f):
