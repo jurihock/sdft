@@ -19,6 +19,7 @@ Source: https://github.com/jurihock/sdft
 """
 
 
+import numba
 import numpy
 
 
@@ -72,6 +73,14 @@ class SDFT:
             # amplitude "demodulation" in time domain
             self.twiddles_synthesis *= 2 / (1 - numpy.cos(numpy.pi * latency))
 
+        # warmup numba
+        dfts = numpy.empty((0, dftsize), complex)
+        samples = numpy.empty((0), float)
+        delayline = self.delayline
+        twiddles = self.twiddles_analysis
+        even = self.even
+        SDFT.process(dfts, samples, delayline, twiddles, even)
+
     def reset(self):
         """
         Reset this SDFT plan to its initial state.
@@ -102,19 +111,9 @@ class SDFT:
 
         delayline = self.delayline
         twiddles = self.twiddles_analysis
+        even = self.even
 
-        first, last = (0.5, 0.5) if self.even else (0.5, 1.0)
-
-        for i in range(samples.size):
-
-            feedback = numpy.real(delayline[1:-1]).sum()
-            feedback += numpy.real(delayline[0]) * first
-            feedback += numpy.real(delayline[-1]) * last
-            feedback /= self.size
-
-            dfts[i] = (samples[i] - feedback + delayline) * twiddles
-
-            numpy.copyto(delayline, dfts[i])
+        SDFT.process(dfts, samples, delayline, twiddles, even)
 
         return self.convolve(dfts) / 2
 
@@ -200,3 +199,21 @@ class SDFT:
             return (0.42 * middle - 0.25 * (left1 + right1) + 0.04 * (left2 + right2)) / N
 
         return x / N
+
+    @numba.njit()
+    def process(dfts, samples, delayline, twiddles, even):
+
+        first, last = (0.5, 0.5) if even else (0.5, 1.0)
+
+        damping = 1 / twiddles.size
+
+        for i in range(samples.size):
+
+            feedback = numpy.real(delayline[1:-1]).sum()
+            feedback += numpy.real(delayline[0]) * first
+            feedback += numpy.real(delayline[-1]) * last
+            feedback *= damping
+
+            dfts[i] = (samples[i] - feedback + delayline) * twiddles
+
+            delayline[:] = dfts[i]
