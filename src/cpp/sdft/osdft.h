@@ -86,15 +86,15 @@ public:
 
     if (fullsize % 2)
     {
-      analysis.coeffs.first = F(0.5);
-      analysis.coeffs.last = F(1.0);
-      analysis.coeffs.all = F(1) / dftsize;
+      analysis.feedback.first = F(0.5);
+      analysis.feedback.last = F(1.0);
+      analysis.feedback.all = F(1) / dftsize;
     }
     else
     {
-      analysis.coeffs.first = F(0.5);
-      analysis.coeffs.last = F(0.5);
-      analysis.coeffs.all = F(1) / dftsize;
+      analysis.feedback.first = F(0.5);
+      analysis.feedback.last = F(0.5);
+      analysis.feedback.all = F(1) / dftsize;
     }
 
     const F omega = F(2) * std::acos(F(-1)) / fullsize; // TODO: (dftsize * 2)
@@ -112,11 +112,7 @@ public:
    **/
   void reset()
   {
-    // analysis.cursor = 0;
-    // std::fill(analysis.input.begin(), analysis.input.end(), 0);
-    // std::fill(analysis.accoutput.begin(), analysis.accoutput.end(), 0);
-    // std::fill(analysis.auxoutput.begin(), analysis.auxoutput.end(), 0);
-    // std::fill(analysis.fiddles.begin(), analysis.fiddles.end(), 1);
+    std::fill(analysis.buffer.begin(), analysis.buffer.end(), 0);
   }
 
   /**
@@ -150,15 +146,15 @@ public:
    **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
-    F feedback = std::real(analysis.buffer[kernelsize]) * analysis.coeffs.first +
-                 std::real(analysis.buffer[kernelsize + (dftsize - 1)]) * analysis.coeffs.last;
+    F feedback = std::real(analysis.buffer[kernelsize]) * analysis.feedback.first
+               + std::real(analysis.buffer[kernelsize + (dftsize - 1)]) * analysis.feedback.last;
 
     for (size_t i = 1, j = i + kernelsize; i < (dftsize - 1); ++i, ++j)
     {
       feedback += std::real(analysis.buffer[j]);
     }
 
-    const F delta = sample - feedback * analysis.coeffs.all;
+    const F delta = sample - feedback * analysis.feedback.all;
 
     for (size_t i = 0, j = i + kernelsize; i < dftsize; ++i, ++j)
     {
@@ -272,9 +268,9 @@ private:
   {
     SDFT::Window window;
     F weight;
+    struct { F first, last, all; } feedback;
     std::vector<std::complex<F>> buffer;
     std::vector<std::complex<F>> twiddles;
-    struct { F first, last, all; } coeffs;
   }
   analysis;
 
