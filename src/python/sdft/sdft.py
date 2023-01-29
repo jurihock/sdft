@@ -53,16 +53,20 @@ class SDFT:
         self.accumulator = numpy.zeros(dftsize, complex)
 
         self.twiddles_analysis = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
+        self.twiddles_synthesis = numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
 
         if self.latency == 1:
 
-            # circular shift in time domain or multiplication of each dft bin by (-1)**n,
-            # which is also equal to numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
-            self.twiddles_synthesis = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(dftsize)])
+            # circular shift in time domain or multiplication of each dft bin by (-1)**n
+            # 1) numpy.array([-1 if n % 2 else +1 for n in numpy.arange(dftsize)])
+            # 2) numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
+
+            # skip amplitude "demodulation" in time domain
+            # since 2 / (1 - numpy.cos(numpy.pi * latency)) is 1
 
         else:
 
-            # amplitude "demodulation" in time domain
+            # apply amplitude "demodulation" in time domain
             self.twiddles_synthesis *= 2 / (1 - numpy.cos(numpy.pi * latency))
 
         dfts = numpy.zeros((0, dftsize), complex)
