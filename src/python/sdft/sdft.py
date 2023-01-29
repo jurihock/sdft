@@ -19,6 +19,7 @@ Source: https://github.com/jurihock/sdft
 """
 
 
+import numba
 import numpy
 
 
@@ -52,17 +53,22 @@ class SDFT:
         self.accumulator = numpy.zeros(dftsize, complex)
 
         self.twiddles_analysis = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
-        self.twiddles_synthesis = numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
 
         if self.latency == 1:
 
-            # circular shift in time domain or multiplication of each dft bin by (-1)**n
+            # circular shift in time domain or multiplication of each dft bin by (-1)**n,
+            # which is also equal to numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
             self.twiddles_synthesis = numpy.array([-1 if n % 2 else +1 for n in numpy.arange(dftsize)])
 
         else:
 
             # amplitude "demodulation" in time domain
             self.twiddles_synthesis *= 2 / (1 - numpy.cos(numpy.pi * latency))
+
+        dfts = numpy.zeros((0, dftsize), complex)
+        samples = numpy.zeros((0), float)
+        samples = self.__synthesize__(dfts, samples, self.twiddles_synthesis)
+        assert samples.shape == (0, )
 
     def reset(self):
         """
@@ -140,9 +146,9 @@ class SDFT:
 
         twiddles = self.twiddles_synthesis
 
-        samples = numpy.sum(numpy.real(dfts * twiddles), axis=-1)
+        samples = numpy.zeros(len(dfts), float)
 
-        return samples * 2
+        return self.__synthesize__(dfts, samples, twiddles)
 
     def convolve(self, x):
         """
@@ -201,3 +207,20 @@ class SDFT:
             return (0.42 * middle - 0.25 * (left1 + right1) + 0.04 * (left2 + right2)) / N
 
         return x / N
+
+    @staticmethod
+    @numba.jit(nopython=True, fastmath=True)
+    def __synthesize__(dfts, samples, twiddles):
+
+        if not dfts.size:
+            return samples
+
+        for i in range(dfts.shape[0]):
+
+            for j in range(dfts.shape[1]):
+
+                samples[i] += numpy.real(dfts[i, j] * twiddles[j])
+
+            samples[i] *= 2
+
+        return samples
