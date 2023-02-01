@@ -64,6 +64,8 @@ class SDFT:
             # skip amplitude "demodulation" in time domain
             # since 2 / (1 - numpy.cos(numpy.pi * latency)) is 1
 
+            pass
+
         else:
 
             # apply amplitude "demodulation" in time domain
