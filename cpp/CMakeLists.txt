@@ -8,13 +8,9 @@ else()
   # add_compile_options(-Wall -Werror)
 endif()
 
-include("${CMAKE_CURRENT_LIST_DIR}/src/c/sdft/CMakeLists.txt")
-include("${CMAKE_CURRENT_LIST_DIR}/src/cpp/sdft/CMakeLists.txt")
+include("${CMAKE_CURRENT_LIST_DIR}/src/sdft/CMakeLists.txt")
 
 include("${CMAKE_CURRENT_LIST_DIR}/lib/cpm.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/lib/dr.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/test/CMakeLists.txt")
-
 include("${CMAKE_CURRENT_LIST_DIR}/lib/python.cmake")
 
 if(Python3_FOUND AND Python3_NumPy_FOUND)

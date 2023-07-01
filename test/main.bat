@@ -5,7 +5,7 @@ set HOPSIZE=100
 set WINDOW=hann
 set LATENCY=1
 
-set BUILD=..\build-release
+set BUILD=build
 
 mkdir %BUILD%
 

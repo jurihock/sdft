@@ -50,7 +50,6 @@ bool readwav(const char* path, float** data, size_t* size, size_t* samplerate)
 
   const size_t samples = (size_t)wav.totalPCMFrameCount;
   const size_t channels = (size_t)wav.channels;
-  const size_t bytes = samples * channels * sizeof(float);
 
   (*data) = allocwav(samples * channels);
   (*size) = samples * channels;
@@ -95,7 +94,6 @@ bool writewav(const char* path, const float* data, const size_t size, const size
 {
   const size_t samples = size;
   const size_t channels = 1;
-  const size_t bytes = samples * channels * sizeof(drwav_int32);
 
   drwav wav;
   drwav_data_format format;

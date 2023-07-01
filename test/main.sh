@@ -5,7 +5,7 @@ HOPSIZE=100
 WINDOW=hann
 LATENCY=1
 
-BUILD=../build-release
+BUILD=build
 
 mkdir -p ${BUILD}
 
