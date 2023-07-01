@@ -349,33 +349,39 @@ sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t t)
 
 sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t window, const sdft_fd_t weight)
 {
+  const sdft_size_t l2 = sdft_kernel_size - 2;
+  const sdft_size_t l1 = sdft_kernel_size - 1;
+  const sdft_size_t m  = sdft_kernel_size;
+  const sdft_size_t r1 = sdft_kernel_size + 1;
+  const sdft_size_t r2 = sdft_kernel_size + 2;
+
   switch (window)
   {
     case sdft_window_hann:
     {
-      const sdft_fdx_t a = sdft_etc_add(values[sdft_kernel_size], values[sdft_kernel_size]);
-      const sdft_fdx_t b = sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]);
+      const sdft_fdx_t a = sdft_etc_add(values[m], values[m]);
+      const sdft_fdx_t b = sdft_etc_add(values[l1], values[r1]);
 
       return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, sdft_etc_sub(a, b));
     }
     case sdft_window_hamming:
     {
-      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.54), values[sdft_kernel_size]);
-      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
+      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.54), values[m]);
+      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[l1], values[r1]));
 
       return sdft_etc_mul_real(weight, sdft_etc_sub(a, b));
     }
     case sdft_window_blackman:
     {
-      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.42), values[sdft_kernel_size]);
-      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.25), sdft_etc_add(values[sdft_kernel_size - 1], values[sdft_kernel_size + 1]));
-      const sdft_fdx_t c = sdft_etc_mul_real((sdft_fd_t)(0.04), sdft_etc_add(values[sdft_kernel_size - 2], values[sdft_kernel_size + 2]));
+      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.42), values[m]);
+      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.25), sdft_etc_add(values[l1], values[r1]));
+      const sdft_fdx_t c = sdft_etc_mul_real((sdft_fd_t)(0.04), sdft_etc_add(values[l2], values[r2]));
 
       return sdft_etc_mul_real(weight, sdft_etc_add(sdft_etc_sub(a, b), c));
     }
     default:
     {
-      return sdft_etc_mul_real(weight, values[sdft_kernel_size]);
+      return sdft_etc_mul_real(weight, values[m]);
     }
   }
 }
