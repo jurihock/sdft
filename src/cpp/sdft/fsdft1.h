@@ -63,7 +63,7 @@ public:
     analysis.window = window;
     synthesis.latency = latency;
 
-    analysis.weight = F(1) / dftsize;
+    analysis.weight = F(1) / (dftsize * 2);
     synthesis.weight = F(2);
 
     analysis.roi = { 0, dftsize };
@@ -74,7 +74,7 @@ public:
     synthesis.twiddles.resize(dftsize);
 
     analysis.cursor = 0;
-    analysis.inputs.resize(dftsize);
+    analysis.inputs.resize(dftsize * 2);
     analysis.resonator.resize(dftsize);
     analysis.outputs.resize(dftsize + kernelsize * 2);
 
@@ -132,16 +132,13 @@ public:
    **/
   void sdft(const T sample, std::complex<F>* const dft)
   {
-    const T newsample = sample;
-    const T oldsample = exchange(analysis.inputs[analysis.cursor], newsample);
+    const F comb = sample - exchange(analysis.inputs[analysis.cursor], sample);
 
     analysis.cursor = (analysis.cursor + 1) % analysis.inputs.size();
 
-    const T comb[] = { newsample - oldsample, newsample + oldsample };
-
     for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
     {
-      const F state = comb[i % 2] + analysis.resonator[i][0] * analysis.fiddles[i] - analysis.resonator[i][1];
+      const F state = comb + analysis.resonator[i][0] * analysis.fiddles[i] - analysis.resonator[i][1];
 
       analysis.outputs[j] = state * analysis.twiddles[i] - analysis.resonator[i][0];
 
@@ -287,41 +284,33 @@ private:
 
   inline static std::complex<F> convolve(const std::complex<F>* values, const SDFT::Window window, const F weight)
   {
-    const auto stride = 2;
-
-    const auto ll = kernelsize - 2 * stride;
-    const auto l  = kernelsize - 1 * stride;
-    const auto m  = kernelsize;
-    const auto r  = kernelsize + 1 * stride;
-    const auto rr = kernelsize + 2 * stride;
-
     switch (window)
     {
       case SDFT::Window::Hann:
       {
-        const std::complex<F> a = values[m] + values[m];
-        const std::complex<F> b = values[l] + values[r];
+        const std::complex<F> a = values[kernelsize] + values[kernelsize];
+        const std::complex<F> b = values[kernelsize - 1] + values[kernelsize + 1];
 
         return F(0.25) * weight * (a - b);
       }
       case SDFT::Window::Hamming:
       {
-        const std::complex<F> a = F(0.54) * values[m];
-        const std::complex<F> b = F(0.23) * (values[l] + values[r]);
+        const std::complex<F> a = F(0.54) * values[kernelsize];
+        const std::complex<F> b = F(0.23) * (values[kernelsize - 1] + values[kernelsize + 1]);
 
         return weight * (a - b);
       }
       case SDFT::Window::Blackman:
       {
-        const std::complex<F> a = F(0.42) * values[m];
-        const std::complex<F> b = F(0.25) * (values[l] + values[r]);
-        const std::complex<F> c = F(0.04) * (values[ll] + values[rr]);
+        const std::complex<F> a = F(0.42) * values[kernelsize];
+        const std::complex<F> b = F(0.25) * (values[kernelsize - 1] + values[kernelsize + 1]);
+        const std::complex<F> c = F(0.04) * (values[kernelsize - 2] + values[kernelsize + 2]);
 
         return weight * (a - b + c);
       }
       default:
       {
-        return weight * values[m];
+        return weight * values[kernelsize];
       }
     }
   }
