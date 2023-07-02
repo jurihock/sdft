@@ -29,6 +29,17 @@
 namespace sdft
 {
   /**
+   * Supported SDFT analysis window types.
+   **/
+  enum class Window
+  {
+    Boxcar,
+    Hann,
+    Hamming,
+    Blackman
+  };
+
+  /**
    * Sliding Discrete Fourier Transform (SDFT).
    * @tparam T Time domain data type, which can be float (default), double or long double.
    * @tparam F Frequency domain data type, which can be float, double (default and recommended) or long double.
@@ -40,17 +51,6 @@ namespace sdft
   public:
 
     /**
-     * Supported SDFT analysis window types.
-     **/
-    enum class Window
-    {
-      Boxcar,
-      Hann,
-      Hamming,
-      Blackman
-    };
-
-    /**
      * Creates a new SDFT plan.
      * @param dftsize Desired number of DFT bins.
      * @param window Analysis window type (boxcar, hann, hamming or blackman).
@@ -58,7 +58,7 @@ namespace sdft
      *                The default value 1 corresponds to the highest latency and best possible SNR.
      *                A smaller value decreases both latency and SNR, but also increases the workload.
      **/
-    SDFT(const size_t dftsize, const SDFT::Window window = SDFT::Window::Hann, const double latency = 1) :
+    SDFT(const size_t dftsize, const Window window = Window::Hann, const double latency = 1) :
       dftsize(dftsize)
     {
       analysis.window = window;
@@ -114,7 +114,7 @@ namespace sdft
     /**
      * Returns the assigned analysis window type.
      **/
-    SDFT::Window window() const
+    Window window() const
     {
       return analysis.window;
     }
@@ -261,7 +261,7 @@ namespace sdft
 
     struct
     {
-      SDFT::Window window;
+      Window window;
 
       F weight;
       std::pair<size_t, size_t> roi;
@@ -297,7 +297,7 @@ namespace sdft
     inline static void convolve(const std::complex<F>* input,
                                 std::complex<F>* const output,
                                 const std::pair<size_t, size_t> roi,
-                                const SDFT::Window window,
+                                const Window window,
                                 const F weight)
     {
       const size_t l2 = kernelsize - 2;
@@ -310,7 +310,7 @@ namespace sdft
       {
         switch (window)
         {
-          case SDFT::Window::Hann:
+          case Window::Hann:
           {
             const std::complex<F> a = input[i + m] + input[i + m];
             const std::complex<F> b = input[i + l1] + input[i + r1];
@@ -319,7 +319,7 @@ namespace sdft
 
             break;
           }
-          case SDFT::Window::Hamming:
+          case Window::Hamming:
           {
             const std::complex<F> a = input[i + m] * F(0.54);
             const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.23);
@@ -328,7 +328,7 @@ namespace sdft
 
             break;
           }
-          case SDFT::Window::Blackman:
+          case Window::Blackman:
           {
             const std::complex<F> a = input[i + m] * F(0.42);
             const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.25);

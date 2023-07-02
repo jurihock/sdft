@@ -7,25 +7,26 @@
 #include <wav.h>
 
 using sdft::SDFT;
+using sdft::Window;
 
-SDFT<>::Window getwindow(const char* window)
+Window getwindow(const char* window)
 {
   if (!strcmp(window, "hann"))
   {
-    return SDFT<>::Window::Hann;
+    return Window::Hann;
   }
 
   if (!strcmp(window, "hamming"))
   {
-    return SDFT<>::Window::Hamming;
+    return Window::Hamming;
   }
 
   if (!strcmp(window, "blackman"))
   {
-    return SDFT<>::Window::Blackman;
+    return Window::Blackman;
   }
 
-  return SDFT<>::Window::Boxcar;
+  return Window::Boxcar;
 }
 
 double getlatency(const char* latency)
