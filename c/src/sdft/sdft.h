@@ -311,19 +311,19 @@ sdft_fdx_t sdft_etc_mul(const sdft_fdx_t x, const sdft_fdx_t y)
   #endif
 }
 
-sdft_fdx_t sdft_etc_mul_real(const sdft_fd_t x, const sdft_fdx_t y)
+sdft_fdx_t sdft_etc_mul_real(const sdft_fdx_t x, const sdft_fd_t y)
 {
   #if defined(SDFT_NO_COMPLEX_H)
     return sdft_etc_complex(
-      x * y.r,
-      x * y.i);
+      x.r * y,
+      x.i * y);
   #elif defined(SDFT_MSVC)
     #if defined(SDFT_FD_FLOAT)
-      return _FCmulcr(y, x);
+      return _FCmulcr(x, y);
     #elif defined(SDFT_FD_DOUBLE)
-      return _Cmulcr(y, x);
+      return _Cmulcr(x, y);
     #elif defined(SDFT_FD_LONG_DOUBLE)
-      return _LCmulcr(y, x);
+      return _LCmulcr(x, y);
     #endif
   #else
     return x * y;
@@ -347,7 +347,11 @@ sdft_fdx_t sdft_etc_polar(const sdft_fd_t r, const sdft_fd_t t)
   #endif
 }
 
-sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t window, const sdft_fd_t weight)
+void sdft_etc_convolve(const sdft_fdx_t* input,
+                       sdft_fdx_t* const output,
+                       const sdft_roi_t roi,
+                       const sdft_window_t window,
+                       const sdft_fd_t weight)
 {
   const sdft_size_t l2 = sdft_kernel_size - 2;
   const sdft_size_t l1 = sdft_kernel_size - 1;
@@ -355,33 +359,44 @@ sdft_fdx_t sdft_etc_convolve(const sdft_fdx_t* values, const sdft_window_t windo
   const sdft_size_t r1 = sdft_kernel_size + 1;
   const sdft_size_t r2 = sdft_kernel_size + 2;
 
-  switch (window)
+  for (sdft_size_t i = roi.first; i < roi.second; ++i)
   {
-    case sdft_window_hann:
+    switch (window)
     {
-      const sdft_fdx_t a = sdft_etc_add(values[m], values[m]);
-      const sdft_fdx_t b = sdft_etc_add(values[l1], values[r1]);
+      case sdft_window_hann:
+      {
+        const sdft_fdx_t a = sdft_etc_add(input[i + m], input[i + m]);
+        const sdft_fdx_t b = sdft_etc_add(input[i + l1], input[i + r1]);
 
-      return sdft_etc_mul_real((sdft_fd_t)(0.25) * weight, sdft_etc_sub(a, b));
-    }
-    case sdft_window_hamming:
-    {
-      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.54), values[m]);
-      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.23), sdft_etc_add(values[l1], values[r1]));
+        output[i] = sdft_etc_mul_real(sdft_etc_sub(a, b), weight * (sdft_fd_t)(0.25));
 
-      return sdft_etc_mul_real(weight, sdft_etc_sub(a, b));
-    }
-    case sdft_window_blackman:
-    {
-      const sdft_fdx_t a = sdft_etc_mul_real((sdft_fd_t)(0.42), values[m]);
-      const sdft_fdx_t b = sdft_etc_mul_real((sdft_fd_t)(0.25), sdft_etc_add(values[l1], values[r1]));
-      const sdft_fdx_t c = sdft_etc_mul_real((sdft_fd_t)(0.04), sdft_etc_add(values[l2], values[r2]));
+        break;
+      }
+      case sdft_window_hamming:
+      {
+        const sdft_fdx_t a = sdft_etc_mul_real(input[i + m], (sdft_fd_t)(0.54));
+        const sdft_fdx_t b = sdft_etc_mul_real(sdft_etc_add(input[i + l1], input[i + r1]), (sdft_fd_t)(0.23));
 
-      return sdft_etc_mul_real(weight, sdft_etc_add(sdft_etc_sub(a, b), c));
-    }
-    default:
-    {
-      return sdft_etc_mul_real(weight, values[m]);
+        output[i] = sdft_etc_mul_real(sdft_etc_sub(a, b), weight);
+
+        break;
+      }
+      case sdft_window_blackman:
+      {
+        const sdft_fdx_t a = sdft_etc_mul_real(input[i + m], (sdft_fd_t)(0.42));
+        const sdft_fdx_t b = sdft_etc_mul_real(sdft_etc_add(input[i + l1], input[i + r1]), (sdft_fd_t)(0.25));
+        const sdft_fdx_t c = sdft_etc_mul_real(sdft_etc_add(input[i + l2], input[i + r2]), (sdft_fd_t)(0.04));
+
+        output[i] = sdft_etc_mul_real(sdft_etc_add(sdft_etc_sub(a, b), c), weight);
+
+        break;
+      }
+      default:
+      {
+        output[i] = sdft_etc_mul_real(input[i + m], weight);
+
+        break;
+      }
     }
   }
 }
@@ -554,7 +569,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
     for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
-      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
+      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(sdft->analysis.fiddles[i], delta));
       sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
       sdft->analysis.auxoutput[j] = sdft->analysis.accoutput[i];
     }
@@ -565,7 +580,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
 
     for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
-      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(delta, sdft->analysis.fiddles[i]));
+      sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(sdft->analysis.fiddles[i], delta));
       sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
       sdft->analysis.auxoutput[j] = sdft_etc_mul(sdft->analysis.accoutput[i], sdft_etc_conj(sdft->analysis.fiddles[i]));
     }
@@ -579,10 +594,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     sdft->analysis.auxoutput[auxoffset[1] + i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[1] - i]);
   }
 
-  for (sdft_size_t i = sdft->analysis.roi.first; i < sdft->analysis.roi.second; ++i)
-  {
-    dft[i] = sdft_etc_convolve(sdft->analysis.auxoutput + i, sdft->analysis.window, sdft->analysis.weight);
-  }
+  sdft_etc_convolve(sdft->analysis.auxoutput, dft, sdft->analysis.roi, sdft->analysis.window, sdft->analysis.weight);
 }
 
 /**

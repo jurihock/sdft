@@ -33,6 +33,8 @@ impl_cast_from_x_for_y!(f32, f64);
 impl_cast_from_x_for_y!(f64, f32);
 impl_cast_from_x_for_y!(f64, f64);
 
+const SDFT_CONVOLUTION_KERNEL_SIZE: usize = 2;
+
 #[derive(Clone,Copy)]
 pub enum Window {
     Boxcar,
@@ -83,13 +85,11 @@ impl<T, F> SDFT<T, F>
     where T: Float + CastFrom<F>,
           F: Float + CastFrom<T> + CastFrom<f64> {
 
-    const SDFT_KERNEL_SIZE: usize = 2;
-
     pub fn new(dftsize: usize,
                window: Window,
                latency: f64
     ) -> Self {
-        let kernelsize = SDFT::<T, F>::SDFT_KERNEL_SIZE;
+        let kernelsize = SDFT_CONVOLUTION_KERNEL_SIZE;
         let pi = std::f64::consts::PI; // acos(-1)
         let omega = -2.0 * pi / ((dftsize as f64) * 2.0);
         let weight = 2.0 / (1.0 - (omega * (dftsize as f64) * latency).cos());
@@ -138,7 +138,7 @@ impl<T, F> SDFT<T, F>
     pub fn sdft_scalar(&mut self, sample: &T, dft: &mut [Complex::<F>]) {
         assert_eq!(dft.len(), self.dftsize);
 
-        let kernelsize = SDFT::<T, F>::SDFT_KERNEL_SIZE;
+        let kernelsize = SDFT_CONVOLUTION_KERNEL_SIZE;
 
         let newsample = *sample;
         let oldsample = self.analysis.input[self.analysis.cursor];
@@ -245,7 +245,11 @@ impl<T, F> SDFT<T, F>
 
     #[inline]
     fn convolve(&self, input: &[Complex::<F>], output: &mut [Complex::<F>]) {
-        let kernelsize = SDFT::<T, F>::SDFT_KERNEL_SIZE;
+        let roi = self.analysis.roi;
+        let window = self.analysis.window;
+        let weight = self.analysis.weight;
+
+        let kernelsize = SDFT_CONVOLUTION_KERNEL_SIZE;
 
         let l2 = kernelsize - 2;
         let l1 = kernelsize - 1;
@@ -253,30 +257,26 @@ impl<T, F> SDFT<T, F>
         let r1 = kernelsize + 1;
         let r2 = kernelsize + 2;
 
-        let roi = self.analysis.roi;
-        let window = self.analysis.window;
-        let weight = self.analysis.weight;
-
         for i in roi.0 .. roi.1 {
             match window {
                 Window::Hann => {
-                    let a = input[m] + input[m];
-                    let b = input[l1] + input[r1];
+                    let a = input[i + m] + input[i + m];
+                    let b = input[i + l1] + input[i + r1];
                     output[i] = (a - b) * weight * F::cast(0.25);
                 },
                 Window::Hamming => {
-                    let a = input[m] * F::cast(0.54);
-                    let b = (input[l1] + input[r1]) * F::cast(0.23);
+                    let a = input[i + m] * F::cast(0.54);
+                    let b = (input[i + l1] + input[i + r1]) * F::cast(0.23);
                     output[i] = (a - b) * weight;
                 },
                 Window::Blackman => {
-                    let a = input[m] * F::cast(0.42);
-                    let b = (input[l1] + input[r1]) * F::cast(0.25);
-                    let c = (input[l2] + input[r2]) * F::cast(0.04);
+                    let a = input[i + m] * F::cast(0.42);
+                    let b = (input[i + l1] + input[i + r1]) * F::cast(0.25);
+                    let c = (input[i + l2] + input[i + r2]) * F::cast(0.04);
                     output[i] = (a - b + c) * weight;
                 },
                 _ => {
-                    output[i] = input[m] * weight;
+                    output[i] = input[i + m] * weight;
                 }
             }
         }

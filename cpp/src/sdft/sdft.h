@@ -140,7 +140,7 @@ public:
 
       for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
       {
-        analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
+        analysis.accoutput[i] = analysis.accoutput[i] + analysis.fiddles[i] * delta;
         analysis.fiddles[i]   = 1;
         analysis.auxoutput[j] = analysis.accoutput[i];
       }
@@ -151,7 +151,7 @@ public:
 
       for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
       {
-        analysis.accoutput[i] = analysis.accoutput[i] + delta * analysis.fiddles[i];
+        analysis.accoutput[i] = analysis.accoutput[i] + analysis.fiddles[i] * delta;
         analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
         analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
       }
@@ -165,10 +165,7 @@ public:
       analysis.auxoutput[auxoffset[1] + i] = std::conj(analysis.auxoutput[auxoffset[1] - i]);
     }
 
-    for (size_t i = analysis.roi.first; i < analysis.roi.second; ++i)
-    {
-      dft[i] = convolve(analysis.auxoutput.data() + i, analysis.window, analysis.weight);
-    }
+    convolve(analysis.auxoutput.data(), dft, analysis.roi, analysis.window, analysis.weight);
   }
 
   /**
@@ -295,7 +292,11 @@ private:
     return value;
   }
 
-  inline static std::complex<F> convolve(const std::complex<F>* values, const SDFT::Window window, const F weight)
+  inline static void convolve(const std::complex<F>* input,
+                              std::complex<F>* const output,
+                              const std::pair<size_t, size_t> roi,
+                              const SDFT::Window window,
+                              const F weight)
   {
     const size_t l2 = kernelsize - 2;
     const size_t l1 = kernelsize - 1;
@@ -303,33 +304,44 @@ private:
     const size_t r1 = kernelsize + 1;
     const size_t r2 = kernelsize + 2;
 
-    switch (window)
+    for (size_t i = roi.first; i < roi.second; ++i)
     {
-      case SDFT::Window::Hann:
+      switch (window)
       {
-        const std::complex<F> a = values[m] + values[m];
-        const std::complex<F> b = values[l1] + values[r1];
+        case SDFT::Window::Hann:
+        {
+          const std::complex<F> a = input[i + m] + input[i + m];
+          const std::complex<F> b = input[i + l1] + input[i + r1];
 
-        return F(0.25) * weight * (a - b);
-      }
-      case SDFT::Window::Hamming:
-      {
-        const std::complex<F> a = F(0.54) * values[m];
-        const std::complex<F> b = F(0.23) * (values[l1] + values[r1]);
+          output[i] = (a - b) * weight * F(0.25);
 
-        return weight * (a - b);
-      }
-      case SDFT::Window::Blackman:
-      {
-        const std::complex<F> a = F(0.42) * values[m];
-        const std::complex<F> b = F(0.25) * (values[l1] + values[r1]);
-        const std::complex<F> c = F(0.04) * (values[l2] + values[r2]);
+          break;
+        }
+        case SDFT::Window::Hamming:
+        {
+          const std::complex<F> a = input[i + m] * F(0.54);
+          const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.23);
 
-        return weight * (a - b + c);
-      }
-      default:
-      {
-        return weight * values[m];
+          output[i] = (a - b) * weight;
+
+          break;
+        }
+        case SDFT::Window::Blackman:
+        {
+          const std::complex<F> a = input[i + m] * F(0.42);
+          const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.25);
+          const std::complex<F> c = (input[i + l2] + input[i + r2]) * F(0.04);
+
+          output[i] = (a - b + c) * weight;
+
+          break;
+        }
+        default:
+        {
+          output[i] = input[i + m] * weight;
+
+          break;
+        }
       }
     }
   }
