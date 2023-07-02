@@ -181,7 +181,7 @@ struct sdft_plan
 
 typedef struct sdft_plan sdft_t;
 
-const sdft_size_t sdft_kernel_size = 2;
+const sdft_size_t sdft_convolution_kernel_size = 2;
 
 sdft_td_t sdft_etc_exchange(sdft_td_t* oldvalue, const sdft_td_t newvalue)
 {
@@ -353,11 +353,11 @@ void sdft_etc_convolve(const sdft_fdx_t* input,
                        const sdft_window_t window,
                        const sdft_fd_t weight)
 {
-  const sdft_size_t l2 = sdft_kernel_size - 2;
-  const sdft_size_t l1 = sdft_kernel_size - 1;
-  const sdft_size_t m  = sdft_kernel_size;
-  const sdft_size_t r1 = sdft_kernel_size + 1;
-  const sdft_size_t r2 = sdft_kernel_size + 2;
+  const sdft_size_t l2 = sdft_convolution_kernel_size - 2;
+  const sdft_size_t l1 = sdft_convolution_kernel_size - 1;
+  const sdft_size_t m  = sdft_convolution_kernel_size;
+  const sdft_size_t r1 = sdft_convolution_kernel_size + 1;
+  const sdft_size_t r2 = sdft_convolution_kernel_size + 2;
 
   for (sdft_size_t i = roi.first; i < roi.second; ++i)
   {
@@ -433,7 +433,7 @@ sdft_t* sdft_alloc_custom(const sdft_size_t dftsize, const sdft_window_t window,
   sdft->analysis.input = (sdft_td_t*)calloc(dftsize * 2, sizeof(sdft_td_t));
 
   sdft->analysis.accoutput = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
-  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft_kernel_size * 2, sizeof(sdft_fdx_t));
+  sdft->analysis.auxoutput = (sdft_fdx_t*)calloc(dftsize + sdft_convolution_kernel_size * 2, sizeof(sdft_fdx_t));
   sdft->analysis.fiddles = (sdft_fdx_t*)calloc(dftsize, sizeof(sdft_fdx_t));
 
   const sdft_fd_t omega = (sdft_fd_t)(-2) * sdft_etc_acos((sdft_fd_t)(-1)) / (dftsize * 2);
@@ -520,7 +520,7 @@ void sdft_reset(sdft_t* sdft)
 
   memset(sdft->analysis.input, 0, (sdft->dftsize * 2) * sizeof(sdft_td_t));
   memset(sdft->analysis.accoutput, 0, (sdft->dftsize) * sizeof(sdft_fdx_t));
-  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + sdft_kernel_size * 2) * sizeof(sdft_fdx_t));
+  memset(sdft->analysis.auxoutput, 0, (sdft->dftsize + sdft_convolution_kernel_size * 2) * sizeof(sdft_fdx_t));
 
   for (sdft_size_t i = 0; i < sdft->dftsize; ++i)
   {
@@ -567,7 +567,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor = 0;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_convolution_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(sdft->analysis.fiddles[i], delta));
       sdft->analysis.fiddles[i]   = sdft_etc_complex(1, 0);
@@ -578,7 +578,7 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
   {
     sdft->analysis.cursor += 1;
 
-    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
+    for (sdft_size_t i = sdft->analysis.roi.first, j = i + sdft_convolution_kernel_size; i < sdft->analysis.roi.second; ++i, ++j)
     {
       sdft->analysis.accoutput[i] = sdft_etc_add(sdft->analysis.accoutput[i], sdft_etc_mul_real(sdft->analysis.fiddles[i], delta));
       sdft->analysis.fiddles[i]   = sdft_etc_mul(sdft->analysis.fiddles[i], sdft->analysis.twiddles[i]);
@@ -586,9 +586,9 @@ void sdft_sdft(sdft_t* sdft, const sdft_td_t sample, sdft_fdx_t* const dft)
     }
   }
 
-  const sdft_size_t auxoffset[] = { sdft_kernel_size, sdft_kernel_size + (sdft->dftsize - 1) };
+  const sdft_size_t auxoffset[] = { sdft_convolution_kernel_size, sdft_convolution_kernel_size + (sdft->dftsize - 1) };
 
-  for (sdft_size_t i = 1; i <= sdft_kernel_size; ++i)
+  for (sdft_size_t i = 1; i <= sdft_convolution_kernel_size; ++i)
   {
     sdft->analysis.auxoutput[auxoffset[0] - i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[0] + i]);
     sdft->analysis.auxoutput[auxoffset[1] + i] = sdft_etc_conj(sdft->analysis.auxoutput[auxoffset[1] - i]);

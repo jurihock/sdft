@@ -76,6 +76,7 @@ pub struct Synthesis<T, F>
 pub struct SDFT<T, F>
     where T: Float + CastFrom<F>,
           F: Float + CastFrom<T> + CastFrom<f64> {
+    kernelsize: usize,
     dftsize: usize,
     analysis: Analysis<T, F>,
     synthesis: Synthesis<T, F>,
@@ -95,8 +96,8 @@ impl<T, F> SDFT<T, F>
         let weight = 2.0 / (1.0 - (omega * (dftsize as f64) * latency).cos());
 
         SDFT {
-            dftsize,
-
+            kernelsize: kernelsize,
+            dftsize: dftsize,
             analysis: Analysis::<T, F> {
                 window,
 
@@ -117,7 +118,6 @@ impl<T, F> SDFT<T, F>
                 auxoutput: vec![Complex::<F>::zero(); dftsize + kernelsize * 2],
                 fiddles: vec![Complex::<F>::one(); dftsize],
             },
-
             synthesis: Synthesis::<T, F> {
                 latency,
 
@@ -138,8 +138,6 @@ impl<T, F> SDFT<T, F>
     pub fn sdft_scalar(&mut self, sample: &T, dft: &mut [Complex::<F>]) {
         assert_eq!(dft.len(), self.dftsize);
 
-        let kernelsize = SDFT_CONVOLUTION_KERNEL_SIZE;
-
         let newsample = *sample;
         let oldsample = self.analysis.input[self.analysis.cursor];
         self.analysis.input[self.analysis.cursor] = newsample;
@@ -150,7 +148,7 @@ impl<T, F> SDFT<T, F>
             self.analysis.cursor = 0;
 
             let mut i = self.analysis.roi.0;
-            let mut j = i + kernelsize;
+            let mut j = i + self.kernelsize;
 
             while i < self.analysis.roi.1 {
                 self.analysis.accoutput[i] = self.analysis.accoutput[i] + self.analysis.fiddles[i] * delta;
@@ -165,7 +163,7 @@ impl<T, F> SDFT<T, F>
             self.analysis.cursor += 1;
 
             let mut i = self.analysis.roi.0;
-            let mut j = i + kernelsize;
+            let mut j = i + self.kernelsize;
 
             while i < self.analysis.roi.1 {
                 self.analysis.accoutput[i] = self.analysis.accoutput[i] + self.analysis.fiddles[i] * delta;
@@ -177,9 +175,9 @@ impl<T, F> SDFT<T, F>
             }
         }
 
-        let auxoffset = (kernelsize, kernelsize + (self.dftsize - 1));
+        let auxoffset = (self.kernelsize, self.kernelsize + (self.dftsize - 1));
 
-        for i in 1 .. kernelsize + 1  {
+        for i in 1 .. self.kernelsize + 1  {
             self.analysis.auxoutput[auxoffset.0 - i] = self.analysis.auxoutput[auxoffset.0 + i].conj();
             self.analysis.auxoutput[auxoffset.1 + i] = self.analysis.auxoutput[auxoffset.1 - i].conj();
         }
@@ -248,8 +246,7 @@ impl<T, F> SDFT<T, F>
         let roi = self.analysis.roi;
         let window = self.analysis.window;
         let weight = self.analysis.weight;
-
-        let kernelsize = SDFT_CONVOLUTION_KERNEL_SIZE;
+        let kernelsize = self.kernelsize;
 
         let l2 = kernelsize - 2;
         let l1 = kernelsize - 1;
