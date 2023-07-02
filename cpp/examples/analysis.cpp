@@ -3,6 +3,7 @@
 #include <matplotlibcpp17/pyplot.h>
 #include <NumCpp.hpp>
 
+using sdft::SDFT;
 namespace py = pybind11;
 
 const double pi = std::acos(-1.);

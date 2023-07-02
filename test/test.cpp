@@ -6,6 +6,8 @@
 #include <dump.h>
 #include <wav.h>
 
+using sdft::SDFT;
+
 SDFT<>::Window getwindow(const char* window)
 {
   if (!strcmp(window, "hann"))
