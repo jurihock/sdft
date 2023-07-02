@@ -1,0 +1,19 @@
+[package]
+edition = "2021"
+name = "sdft"
+version = "1.4.0"
+authors = ["Juergen Hock <juergen.hock@jurihock.de>"]
+repository = "https://github.com/jurihock/sdft"
+description = "Forward and inverse Sliding DFT"
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE"
+keywords = ["fourier", "dft", "audio", "signal-processing", "spectrum"]
+categories = ["algorithms", "mathematics", "multimedia", "science"]
+
+[dependencies]
+num = "0.4.*"
+
+[dev-dependencies]
+ndarray = "0.15.*"
+ndarray-npy = "0.8.*"
