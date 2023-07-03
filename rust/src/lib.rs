@@ -112,7 +112,7 @@ impl<T, F> SDFT<T, F>
 
                 cursor: 0,
                 maxcursor: dftsize * 2 - 1,
-                input: vec![],
+                input: vec![T::zero(); dftsize * 2],
 
                 accoutput: vec![Complex::<F>::zero(); dftsize],
                 auxoutput: vec![Complex::<F>::zero(); dftsize + kernelsize * 2],
@@ -134,6 +134,8 @@ impl<T, F> SDFT<T, F>
             }
         }
     }
+
+    pub fn size(&self) -> usize { self.dftsize }
 
     pub fn sdft_scalar(&mut self, sample: &T, dft: &mut [Complex::<F>]) {
         assert_eq!(dft.len(), self.dftsize);
@@ -285,7 +287,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
+    fn todo() {
         // let result = add(2, 2);
         // assert_eq!(result, 4);
     }
