@@ -19,7 +19,7 @@ class STFT:
     Short-Time Fourier Transform (STFT).
     """
 
-    def __init__(self, framesize, hopsize, window='hann', shift=False):
+    def __init__(self, framesize, hopsize, dftsize=None, window='hann', shift=False):
         """
         Create a new STFT plan.
 
@@ -29,16 +29,27 @@ class STFT:
             Buffer size in samples.
         hopsize : int
             Hop size in samples.
+        dftsize : int, optional
+            DFT size in samples, which enables asymmetric windows.
         window : str, optional
-            Analysis window type (boxcar, hann, hamming or blackman).
+            Window function (boxcar, hann, hamming or blackman).
         shift : bool, optional
             Enable circular shift.
         """
 
         self.framesize = framesize
         self.hopsize = hopsize
+        self.dftsize = dftsize
         self.window = window
         self.shift = shift
+
+        self.analysis_window_size = self.framesize if self.dftsize is None else \
+                                    self.ifft([0] * self.dftsize).size
+
+        self.synthesis_window_size = self.framesize
+
+        assert self.analysis_window_size >= self.synthesis_window_size, \
+            f'Invalid framesize and dftsize combination!'
 
     def stft(self, samples):
         """
@@ -59,9 +70,11 @@ class STFT:
 
         assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
-        W = self.weights()
+        W = self.asymmetric_analysis_window(self.analysis_window_size, self.synthesis_window_size) \
+            if self.analysis_window_size != self.synthesis_window_size else \
+            self.symmetric_window(self.analysis_window_size)
 
-        frames = sliding_window_view(samples, self.framesize, writeable=False)[::self.hopsize]
+        frames = sliding_window_view(samples, self.analysis_window_size, writeable=False)[::self.hopsize]
 
         dfts = self.fft(frames * W)
 
@@ -86,13 +99,21 @@ class STFT:
 
         assert dfts.ndim == 2, f'Expected 2D array (samples,frequencies), got {dfts.shape}!'
 
-        N, W = dfts.shape[0] * self.hopsize + self.framesize, self.weights()
+        A = self.asymmetric_analysis_window(self.analysis_window_size, self.synthesis_window_size) \
+            if self.analysis_window_size != self.synthesis_window_size else \
+            self.symmetric_window(self.analysis_window_size)
 
-        W *= self.hopsize / numpy.sum(W**2)  # unity gain
+        S = self.asymmetric_synthesis_window(self.analysis_window_size, self.synthesis_window_size) \
+            if self.analysis_window_size != self.synthesis_window_size else \
+            self.symmetric_window(self.analysis_window_size)
+
+        W = S * self.hopsize / numpy.sum(A * S)
+
+        N = dfts.shape[0] * self.hopsize + self.analysis_window_size
 
         samples = numpy.zeros((N), float)
 
-        frames0 = sliding_window_view(samples, self.framesize, writeable=True)[::self.hopsize]
+        frames0 = sliding_window_view(samples, self.analysis_window_size, writeable=True)[::self.hopsize]
         frames1 = self.ifft(dfts) * W
 
         for i in range(min(len(frames0), len(frames1))):
@@ -125,12 +146,9 @@ class STFT:
 
         return data
 
-    def weights(self):
-        """
-        Compute time-domain window coefficients.
-        """
+    def symmetric_window(self, n):
 
-        N, W = self.framesize, str(self.window).lower()
+        N, W = n, str(self.window).lower()
 
         if W in 'hann':
 
@@ -146,3 +164,31 @@ class STFT:
                         + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(N) / N)
 
         return numpy.ones(N)
+
+    def asymmetric_analysis_window(self, n, m):
+
+        m //= 2
+
+        left = self.symmetric_window(2 * n - 2 * m)
+        right = self.symmetric_window(2 * m)
+
+        weights = numpy.zeros(n)
+
+        weights[:n-m] = left[:n-m]
+        weights[-m:] = right[-m:]
+
+        return weights
+
+    def asymmetric_synthesis_window(self, n, m):
+
+        m //= 2
+
+        left = self.symmetric_window(2 * n - 2 * m)
+        right = self.symmetric_window(2 * m)
+
+        weights = numpy.zeros(n)
+
+        weights[n-m-m:n-m] = right[:m] / left[n-m-m:n-m]
+        weights[-m:] = right[-m:]
+
+        return weights

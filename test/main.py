@@ -55,7 +55,7 @@ def main():
 
     # compute stft reference spectrogram
 
-    stft = STFT(framesize, hopsize, window)
+    stft = STFT(framesize=framesize, hopsize=hopsize, window=window)
 
     stftx = stft.stft(x)
     stfty = stft.istft(stftx)
