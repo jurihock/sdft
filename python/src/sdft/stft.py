@@ -105,7 +105,7 @@ class STFT:
 
         S = self.asymmetric_synthesis_window(self.analysis_window_size, self.synthesis_window_size) \
             if self.analysis_window_size != self.synthesis_window_size else \
-            self.symmetric_window(self.analysis_window_size)
+            self.symmetric_window(self.synthesis_window_size)
 
         W = S * self.hopsize / numpy.sum(A * S)
 
@@ -188,7 +188,7 @@ class STFT:
 
         weights = numpy.zeros(n)
 
-        weights[n-m-m:n-m] = right[:m] / left[n-m-m:n-m]
+        weights[n-m-m:n-m] = numpy.square(right[:m]) / left[n-m-m:n-m]
         weights[-m:] = right[-m:]
 
         return weights
