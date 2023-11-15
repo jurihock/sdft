@@ -146,28 +146,30 @@ class STFT:
 
         return data
 
-    def symmetric_window(self, n):
+    def symmetric_window(self, symmetric_window_size):
 
-        N, W = n, str(self.window).lower()
+        w = str(self.window).lower()
+        n = symmetric_window_size
 
-        if W in 'hann':
+        if w in 'hann':
 
-            return 0.5 - 0.5 * numpy.cos(2 * numpy.pi * numpy.arange(N) / N)
+            return 0.5 - 0.5 * numpy.cos(2 * numpy.pi * numpy.arange(n) / n)
 
-        if W in 'hamming':
+        if w in 'hamming':
 
-            return 0.54 - 0.46 * numpy.cos(2 * numpy.pi * numpy.arange(N) / N)
+            return 0.54 - 0.46 * numpy.cos(2 * numpy.pi * numpy.arange(n) / n)
 
-        if W in 'blackman':
+        if w in 'blackman':
 
-            return 0.42 - 0.5  * numpy.cos(2 * numpy.pi * numpy.arange(N) / N) \
-                        + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(N) / N)
+            return 0.42 - 0.5  * numpy.cos(2 * numpy.pi * numpy.arange(n) / n) \
+                        + 0.08 * numpy.cos(4 * numpy.pi * numpy.arange(n) / n)
 
-        return numpy.ones(N)
+        return numpy.ones(n)
 
-    def asymmetric_analysis_window(self, n, m):
+    def asymmetric_analysis_window(self, analysis_window_size, synthesis_window_size):
 
-        m //= 2
+        n = analysis_window_size
+        m = synthesis_window_size // 2
 
         left = self.symmetric_window(2 * n - 2 * m)
         right = self.symmetric_window(2 * m)
@@ -179,9 +181,10 @@ class STFT:
 
         return weights
 
-    def asymmetric_synthesis_window(self, n, m):
+    def asymmetric_synthesis_window(self, analysis_window_size, synthesis_window_size):
 
-        m //= 2
+        n = analysis_window_size
+        m = synthesis_window_size // 2
 
         left = self.symmetric_window(2 * n - 2 * m)
         right = self.symmetric_window(2 * m)
