@@ -17,11 +17,13 @@ Forward and inverse Sliding DFT according to [[1]](#1) and [[2]](#2) with follow
 
 The [Sliding Discrete Fourier Transform (SDFT)](https://en.wikipedia.org/wiki/Sliding_DFT) is a recursive approach to compute the Fourier transform sample by sample. In this particular case it's more efficient than the FFT based [Short Time Fourier Transform (STFT)](https://en.wikipedia.org/wiki/Short-time_Fourier_transform) approach with one sample hops. On the other side, the SDFT is still known to suffer from accumulated errors and potential instabilities.
 
-This implementation features the *modulated* SDFT algorithm, which is guaranteed to be stable while being accurate. It takes real valued samples and estimates the corresponding half size complex valued DFT vector for each of them. The length of the estimated DFT vector is not limited to the power of two. The eventually altered DFT vector can also be used to synthesize an output sample.
+This implementation features the *modulated* SDFT algorithm, which is guaranteed to be stable while being accurate. It takes real valued samples and estimates the corresponding half size complex valued DFT vector for each of them. The DFT vector of a particular input sample contains linearly spaced frequency bins from 0 Hz up to the [Nyquist](https://en.wikipedia.org/wiki/Nyquist_frequency) frequency. Therefore, the spectral resolution depends on the input sample rate and the specified DFT vector length. The length of the estimated DFT vector, as specified in the SDFT constructor, is not limited to the power of two. The eventually altered DFT vector can also be used to synthesize an output sample.
 
 Compared to STFT, the algorithmic synthesis latency of SDFT is lower and can additionally be reduced at the expense of signal to noise ratio. Spectral data processing coupled with reduced latency is especially useful for real-time applications, e.g. digital audio signal processing.
 
 ## Basic usage
+
+For detailed usage, please have a look at the provided "analysis" examples.
 
 ### C
 
