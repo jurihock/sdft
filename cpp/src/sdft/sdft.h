@@ -1,14 +1,14 @@
 /**
- * Copyright (c) 2022 Juergen Hock
+ * Copyright (c) 2025 Juergen Hock
  *
  * SPDX-License-Identifier: MIT
  *
- * Modulated Sliding DFT implementation according to [1] combined with [2].
+ * Sliding DFT implementation according to [1] combined with [2].
  *
- * [1] Krzysztof Duda
- *     Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform
- *     IEEE Signal Processing Magazine (2010)
- *     https://ieeexplore.ieee.org/document/5563098
+ * [1] Rick Lyons
+ *     An Efficient Full-Band Sliding DFT Spectrum Analyzer
+ *     DSPRelated.com (2011)
+ *     https://www.dsprelated.com/showarticle/1396.php
  *
  * [2] Russell Bradford and Richard Dobson and John ffitch
  *     Sliding is Smoother than Jumping
@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdlib>
@@ -67,27 +68,44 @@ namespace sdft
       analysis.weight = F(1) / (dftsize * 2);
       synthesis.weight = F(2);
 
-      analysis.roi = { 0, dftsize };
-      synthesis.roi = { 0, dftsize };
+      analysis.buffer.resize(dftsize + kernelsize * 2);
 
       analysis.twiddles.resize(dftsize);
       synthesis.twiddles.resize(dftsize);
 
-      analysis.cursor = 0;
-      analysis.maxcursor = dftsize * 2 - 1;
-      analysis.input.resize(dftsize * 2);
+      size_t fullsize;
 
-      analysis.accoutput.resize(dftsize);
-      analysis.auxoutput.resize(dftsize + kernelsize * 2);
-      analysis.fiddles.resize(dftsize, 1);
+      if (dftsize % 2) // odd dftsize => even fullsize
+      {
+        fullsize = dftsize * 2 - 2;
+        assert(dftsize == (fullsize / 2) + 1);
+      }
+      else // even dftsize => odd fullsize
+      {
+        fullsize = dftsize * 2 - 1;
+        assert(dftsize == (fullsize + 1) / 2);
+      }
 
-      const F omega = F(-2) * std::acos(F(-1)) / (dftsize * 2);
-      const F weight = F(+2) / (F(1) - std::cos(omega * dftsize * latency));
+      if (fullsize % 2)
+      {
+        analysis.feedback.first = F(0.5);
+        analysis.feedback.last = F(1.0);
+        analysis.feedback.all = F(1) / dftsize;
+      }
+      else
+      {
+        analysis.feedback.first = F(0.5);
+        analysis.feedback.last = F(0.5);
+        analysis.feedback.all = F(1) / dftsize;
+      }
+
+      const F omega = F(2) * std::acos(F(-1)) / fullsize; // TODO: (dftsize * 2)
+      const F weight = F(2) / (F(1) - std::cos(omega * dftsize * latency));
 
       for (size_t i = 0; i < dftsize; ++i)
       {
         analysis.twiddles[i] = std::polar(F(1), omega * i);
-        synthesis.twiddles[i] = std::polar(weight, omega * i * dftsize * latency);
+        synthesis.twiddles[i] = std::polar(weight, omega * i * dftsize * latency); // TODO: -omega
       }
     }
 
@@ -96,11 +114,7 @@ namespace sdft
      **/
     void reset()
     {
-      analysis.cursor = 0;
-      std::fill(analysis.input.begin(), analysis.input.end(), 0);
-      std::fill(analysis.accoutput.begin(), analysis.accoutput.end(), 0);
-      std::fill(analysis.auxoutput.begin(), analysis.auxoutput.end(), 0);
-      std::fill(analysis.fiddles.begin(), analysis.fiddles.end(), 1);
+      std::fill(analysis.buffer.begin(), analysis.buffer.end(), 0);
     }
 
     /**
@@ -134,40 +148,33 @@ namespace sdft
      **/
     void sdft(const T sample, std::complex<F>* const dft)
     {
-      const F delta = sample - exchange(analysis.input[analysis.cursor], sample);
+      F feedback = std::real(analysis.buffer[kernelsize]) * analysis.feedback.first
+                + std::real(analysis.buffer[kernelsize + (dftsize - 1)]) * analysis.feedback.last;
 
-      if (analysis.cursor >= analysis.maxcursor)
+      for (size_t i = 1, j = i + kernelsize; i < (dftsize - 1); ++i, ++j)
       {
-        analysis.cursor = 0;
-
-        for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
-        {
-          analysis.accoutput[i] = analysis.accoutput[i] + analysis.fiddles[i] * delta;
-          analysis.fiddles[i]   = 1;
-          analysis.auxoutput[j] = analysis.accoutput[i];
-        }
-      }
-      else
-      {
-        analysis.cursor += 1;
-
-        for (size_t i = analysis.roi.first, j = i + kernelsize; i < analysis.roi.second; ++i, ++j)
-        {
-          analysis.accoutput[i] = analysis.accoutput[i] + analysis.fiddles[i] * delta;
-          analysis.fiddles[i]   = analysis.fiddles[i] * analysis.twiddles[i];
-          analysis.auxoutput[j] = analysis.accoutput[i] * std::conj(analysis.fiddles[i]);
-        }
+        feedback += std::real(analysis.buffer[j]);
       }
 
-      const size_t auxoffset[] = { kernelsize, kernelsize + (dftsize - 1) };
+      const F delta = sample - feedback * analysis.feedback.all;
+
+      for (size_t i = 0, j = i + kernelsize; i < dftsize; ++i, ++j)
+      {
+        analysis.buffer[j] = (delta + analysis.buffer[j]) * analysis.twiddles[i];
+      }
+
+      const size_t offsets[] = { kernelsize, kernelsize + (dftsize - 1) };
 
       for (size_t i = 1; i <= kernelsize; ++i)
       {
-        analysis.auxoutput[auxoffset[0] - i] = std::conj(analysis.auxoutput[auxoffset[0] + i]);
-        analysis.auxoutput[auxoffset[1] + i] = std::conj(analysis.auxoutput[auxoffset[1] - i]);
+        analysis.buffer[offsets[0] - i] = std::conj(analysis.buffer[offsets[0] + i]);
+        analysis.buffer[offsets[1] + i] = std::conj(analysis.buffer[offsets[1] - i]);
       }
 
-      convolve(analysis.auxoutput.data(), dft, analysis.roi, analysis.window, analysis.weight);
+      for (size_t i = 0; i < dftsize; ++i)
+      {
+        dft[i] = convolve(analysis.buffer.data() + i, analysis.window, analysis.weight);
+      }
     }
 
     /**
@@ -208,14 +215,14 @@ namespace sdft
 
       if (synthesis.latency == 1)
       {
-        for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
+        for (size_t i = 0; i < dftsize; ++i)
         {
           sample += dft[i].real() * (i % 2 ? -1 : +1);
         }
       }
       else
       {
-        for (size_t i = synthesis.roi.first; i < synthesis.roi.second; ++i)
+        for (size_t i = 0; i < dftsize; ++i)
         {
           sample += (dft[i] * synthesis.twiddles[i]).real();
         }
@@ -262,88 +269,50 @@ namespace sdft
     struct
     {
       Window window;
-
       F weight;
-      std::pair<size_t, size_t> roi;
+      struct { F first, last, all; } feedback;
+      std::vector<std::complex<F>> buffer;
       std::vector<std::complex<F>> twiddles;
-
-      size_t cursor;
-      size_t maxcursor;
-      std::vector<T> input;
-
-      std::vector<std::complex<F>> accoutput;
-      std::vector<std::complex<F>> auxoutput;
-      std::vector<std::complex<F>> fiddles;
     }
     analysis;
 
     struct
     {
       double latency;
-
       F weight;
-      std::pair<size_t, size_t> roi;
       std::vector<std::complex<F>> twiddles;
     }
     synthesis;
 
-    inline static T exchange(T& oldvalue, const T newvalue)
+    static std::complex<F> convolve(const std::complex<F>* values, const Window window, const F weight)
     {
-      const T value = oldvalue;
-      oldvalue = newvalue;
-      return value;
-    }
-
-    inline static void convolve(const std::complex<F>* input,
-                                std::complex<F>* const output,
-                                const std::pair<size_t, size_t> roi,
-                                const Window window,
-                                const F weight)
-    {
-      const size_t l2 = kernelsize - 2;
-      const size_t l1 = kernelsize - 1;
-      const size_t m  = kernelsize;
-      const size_t r1 = kernelsize + 1;
-      const size_t r2 = kernelsize + 2;
-
-      for (size_t i = roi.first; i < roi.second; ++i)
+      switch (window)
       {
-        switch (window)
+        case Window::Hann:
         {
-          case Window::Hann:
-          {
-            const std::complex<F> a = input[i + m] + input[i + m];
-            const std::complex<F> b = input[i + l1] + input[i + r1];
+          const std::complex<F> a = values[kernelsize] + values[kernelsize];
+          const std::complex<F> b = values[kernelsize - 1] + values[kernelsize + 1];
 
-            output[i] = (a - b) * weight * F(0.25);
+          return (a - b) * weight * F(0.25);
+        }
+        case Window::Hamming:
+        {
+          const std::complex<F> a = F(0.54) * values[kernelsize];
+          const std::complex<F> b = F(0.23) * (values[kernelsize - 1] + values[kernelsize + 1]);
 
-            break;
-          }
-          case Window::Hamming:
-          {
-            const std::complex<F> a = input[i + m] * F(0.54);
-            const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.23);
+          return (a - b) * weight;
+        }
+        case Window::Blackman:
+        {
+          const std::complex<F> a = F(0.42) * values[kernelsize];
+          const std::complex<F> b = F(0.25) * (values[kernelsize - 1] + values[kernelsize + 1]);
+          const std::complex<F> c = F(0.04) * (values[kernelsize - 2] + values[kernelsize + 2]);
 
-            output[i] = (a - b) * weight;
-
-            break;
-          }
-          case Window::Blackman:
-          {
-            const std::complex<F> a = input[i + m] * F(0.42);
-            const std::complex<F> b = (input[i + l1] + input[i + r1]) * F(0.25);
-            const std::complex<F> c = (input[i + l2] + input[i + r2]) * F(0.04);
-
-            output[i] = (a - b + c) * weight;
-
-            break;
-          }
-          default:
-          {
-            output[i] = input[i + m] * weight;
-
-            break;
-          }
+          return (a - b + c) * weight;
+        }
+        default:
+        {
+          return values[kernelsize] * weight;
         }
       }
     }

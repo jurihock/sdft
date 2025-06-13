@@ -1,14 +1,14 @@
 """
-Copyright (c) 2022 Juergen Hock
+Copyright (c) 2025 Juergen Hock
 
 SPDX-License-Identifier: MIT
 
-Modulated Sliding DFT implementation according to [1] combined with [2].
+Sliding DFT implementation according to [1] combined with [2].
 
-[1] Krzysztof Duda
-    Accurate, Guaranteed Stable, Sliding Discrete Fourier Transform
-    IEEE Signal Processing Magazine (2010)
-    https://ieeexplore.ieee.org/document/5563098
+[1] Rick Lyons
+    An Efficient Full-Band Sliding DFT Spectrum Analyzer
+    DSPRelated.com (2011)
+    https://www.dsprelated.com/showarticle/1396.php
 
 [2] Russell Bradford and Richard Dobson and John ffitch
     Sliding is Smoother than Jumping
@@ -19,6 +19,7 @@ Source: https://github.com/jurihock/sdft
 """
 
 
+import numba
 import numpy
 
 
@@ -43,15 +44,23 @@ class SDFT:
             A smaller value decreases both latency and SNR, but also increases the workload.
         """
 
+        if dftsize % 2:                          # odd dftsize
+            fullsize = (dftsize - 1) * 2         # even fullsize
+            assert dftsize == (fullsize / 2) + 1
+        else:                                    # even dftsize
+            fullsize = dftsize * 2 - 1           # odd fullsize
+            assert dftsize == (fullsize + 1) / 2
+
+        self.odd = fullsize % 2
+        self.even = not self.odd
+
         self.size = dftsize
         self.window = window
         self.latency = latency
 
-        self.offset = 0
-        self.delayline = numpy.zeros(dftsize * 2, float)
-        self.accumulator = numpy.zeros(dftsize, complex)
+        self.delayline = numpy.zeros(dftsize, complex)
 
-        self.twiddles_analysis = numpy.exp(-2j * numpy.pi * numpy.arange(dftsize) / (dftsize * 2))
+        self.twiddles_analysis = numpy.exp(+2j * numpy.pi * numpy.arange(dftsize) / fullsize)
         self.twiddles_synthesis = numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
 
         if self.latency == 1:
@@ -64,14 +73,20 @@ class SDFT:
             # amplitude "demodulation" in time domain
             self.twiddles_synthesis *= 2 / (1 - numpy.cos(numpy.pi * latency))
 
+        # warmup numba
+        dfts = numpy.empty((0, dftsize), complex)
+        samples = numpy.empty((0), float)
+        delayline = self.delayline
+        twiddles = self.twiddles_analysis
+        even = self.even
+        SDFT.process(dfts, samples, delayline, twiddles, even)
+
     def reset(self):
         """
         Reset this SDFT plan to its initial state.
         """
 
-        self.offset = 0
         self.delayline.fill(0)
-        self.accumulator.fill(0)
 
     def sdft(self, samples):
         """
@@ -92,32 +107,15 @@ class SDFT:
 
         assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
-        M = samples.size
-        N = self.size
+        dfts = numpy.empty((samples.size, self.size), complex)
 
-        m = self.offset
-        n = numpy.arange(N)
+        delayline = self.delayline
+        twiddles = self.twiddles_analysis
+        even = self.even
 
-        self.offset += M
+        SDFT.process(dfts, samples, delayline, twiddles, even)
 
-        twiddles = self.twiddles_analysis[None, :]
-        twiddles = numpy.repeat(twiddles, M + 1, axis=0)
-        twiddles[0] **= m
-        numpy.cumprod(twiddles, axis=0, out=twiddles)
-
-        delayline = numpy.concatenate((self.delayline, samples))
-        numpy.copyto(self.delayline, delayline[-(N * 2):])
-        data = samples - delayline[:M]
-        data = data[:, None] * twiddles[:-1]
-
-        data[0] += self.accumulator
-        numpy.cumsum(data, axis=0, out=data)
-        numpy.copyto(self.accumulator, data[-1])
-        data *= numpy.conj(twiddles[1:])
-
-        dfts = self.convolve(data)
-
-        return dfts / 2
+        return self.convolve(dfts) / 2
 
     def isdft(self, dfts):
         """
@@ -149,13 +147,13 @@ class SDFT:
         Window the specified DFT matrix.
         """
 
-        window = str(self.window).lower()
-
         x = numpy.atleast_2d(x)
 
         assert x.ndim == 2, f'Expected 2D array (samples,frequencies), got {x.shape}!'
 
         M, N = x.shape
+
+        window = str(self.window).lower()
 
         if window in 'hann':
 
@@ -201,3 +199,21 @@ class SDFT:
             return (0.42 * middle - 0.25 * (left1 + right1) + 0.04 * (left2 + right2)) / N
 
         return x / N
+
+    @numba.njit()
+    def process(dfts, samples, delayline, twiddles, even):
+
+        first, last = (0.5, 0.5) if even else (0.5, 1.0)
+
+        damping = 1 / twiddles.size
+
+        for i in range(samples.size):
+
+            feedback = numpy.real(delayline[1:-1]).sum()
+            feedback += numpy.real(delayline[0]) * first
+            feedback += numpy.real(delayline[-1]) * last
+            feedback *= damping
+
+            dfts[i] = (samples[i] - feedback + delayline) * twiddles
+
+            delayline[:] = dfts[i]
