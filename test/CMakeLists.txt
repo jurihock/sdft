@@ -10,11 +10,9 @@ endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/../cpp/lib/cpm.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/../cpp/lib/dr.cmake")
-
-include("${CMAKE_CURRENT_LIST_DIR}/../c/src/sdft/CMakeLists.txt")
 include("${CMAKE_CURRENT_LIST_DIR}/../cpp/src/sdft/CMakeLists.txt")
 
-foreach(XXX c cpp)
+foreach(XXX cpp)
 
   project(sdft-test-${XXX})
 

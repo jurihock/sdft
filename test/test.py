@@ -1,3 +1,8 @@
+# /// script
+# dependencies = ["matplotlib", "numba", "numpy"]
+# ///
+
+
 import os, sys
 src = os.path.join(os.path.dirname(__file__), '..', 'python', 'src')
 sys.path.insert(0, src)
