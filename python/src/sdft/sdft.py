@@ -58,7 +58,7 @@ class SDFT:
         self.window = window
         self.latency = latency
 
-        self.delayline = numpy.zeros(dftsize, complex)
+        self.buffer = numpy.zeros(dftsize, complex)
 
         self.twiddles_analysis = numpy.exp(+2j * numpy.pi * numpy.arange(dftsize) / fullsize)
         self.twiddles_synthesis = numpy.exp(-1j * numpy.pi * numpy.arange(dftsize) * latency)
@@ -76,10 +76,10 @@ class SDFT:
         # warmup numba
         dfts = numpy.empty((0, dftsize), complex)
         samples = numpy.empty((0), float)
-        delayline = self.delayline
+        buffer = self.buffer
         twiddles = self.twiddles_analysis
         even = self.even
-        self.__analyze__(dfts, samples, delayline, twiddles, even)
+        self.__analyze__(dfts, samples, buffer, twiddles, even)
 
         # warmup numba
         dfts = numpy.empty((0, dftsize), complex)
@@ -92,7 +92,7 @@ class SDFT:
         Reset this SDFT plan to its initial state.
         """
 
-        self.delayline.fill(0)
+        self.buffer.fill(0)
 
     def sdft(self, samples):
         """
@@ -113,12 +113,12 @@ class SDFT:
 
         assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
-        delayline = self.delayline
+        buffer = self.buffer
         twiddles = self.twiddles_analysis
         even = self.even
 
         dfts = numpy.empty((samples.size, self.size), complex)
-        self.__analyze__(dfts, samples, delayline, twiddles, even)
+        self.__analyze__(dfts, samples, buffer, twiddles, even)
         dfts = self.__convolve__(dfts)
         dfts /= 2
 
@@ -211,7 +211,7 @@ class SDFT:
 
     @staticmethod
     @numba.jit(nopython=True, fastmath=True)
-    def __analyze__(dfts, samples, delayline, twiddles, even):
+    def __analyze__(dfts, samples, buffer, twiddles, even):
 
         if not samples.size:
             return
@@ -222,14 +222,14 @@ class SDFT:
 
         for i in range(samples.size):
 
-            feedback  = numpy.real(delayline[1:-1]).sum()
-            feedback += numpy.real(delayline[0]) * first
-            feedback += numpy.real(delayline[-1]) * last
+            feedback  = numpy.real(buffer[1:-1]).sum()
+            feedback += numpy.real(buffer[0]) * first
+            feedback += numpy.real(buffer[-1]) * last
             feedback *= damping
 
-            dfts[i] = (samples[i] - feedback + delayline) * twiddles
+            dfts[i] = (samples[i] - feedback + buffer) * twiddles
 
-            delayline[:] = dfts[i]
+            buffer[:] = dfts[i]
 
     @staticmethod
     @numba.jit(nopython=True, fastmath=True)
