@@ -79,7 +79,13 @@ class SDFT:
         delayline = self.delayline
         twiddles = self.twiddles_analysis
         even = self.even
-        SDFT.process(dfts, samples, delayline, twiddles, even)
+        self.__analyze__(dfts, samples, delayline, twiddles, even)
+
+        # warmup numba
+        dfts = numpy.empty((0, dftsize), complex)
+        samples = numpy.zeros((0), dtype=float)
+        twiddles = self.twiddles_synthesis
+        self.__synthesize__(dfts, samples, twiddles)
 
     def reset(self):
         """
@@ -107,15 +113,16 @@ class SDFT:
 
         assert samples.ndim == 1, f'Expected 1D array (samples,), got {samples.shape}!'
 
-        dfts = numpy.empty((samples.size, self.size), complex)
-
         delayline = self.delayline
         twiddles = self.twiddles_analysis
         even = self.even
 
-        SDFT.process(dfts, samples, delayline, twiddles, even)
+        dfts = numpy.empty((samples.size, self.size), complex)
+        self.__analyze__(dfts, samples, delayline, twiddles, even)
+        dfts = self.__convolve__(dfts)
+        dfts /= 2
 
-        return self.convolve(dfts) / 2
+        return dfts
 
     def isdft(self, dfts):
         """
@@ -138,11 +145,13 @@ class SDFT:
 
         twiddles = self.twiddles_synthesis
 
-        samples = numpy.sum(numpy.real(dfts * twiddles), axis=-1)
+        samples = numpy.zeros(len(dfts), float)
+        self.__synthesize__(dfts, samples, twiddles)
+        samples *= 2
 
-        return samples * 2
+        return samples
 
-    def convolve(self, x):
+    def __convolve__(self, x):
         """
         Window the specified DFT matrix.
         """
@@ -200,8 +209,12 @@ class SDFT:
 
         return x / N
 
-    @numba.njit()
-    def process(dfts, samples, delayline, twiddles, even):
+    @staticmethod
+    @numba.jit(nopython=True, fastmath=True)
+    def __analyze__(dfts, samples, delayline, twiddles, even):
+
+        if not samples.size:
+            return
 
         first, last = (0.5, 0.5) if even else (0.5, 1.0)
 
@@ -209,7 +222,7 @@ class SDFT:
 
         for i in range(samples.size):
 
-            feedback = numpy.real(delayline[1:-1]).sum()
+            feedback  = numpy.real(delayline[1:-1]).sum()
             feedback += numpy.real(delayline[0]) * first
             feedback += numpy.real(delayline[-1]) * last
             feedback *= damping
@@ -217,3 +230,16 @@ class SDFT:
             dfts[i] = (samples[i] - feedback + delayline) * twiddles
 
             delayline[:] = dfts[i]
+
+    @staticmethod
+    @numba.jit(nopython=True, fastmath=True)
+    def __synthesize__(dfts, samples, twiddles):
+
+        if not dfts.size:
+            return
+
+        for i in range(dfts.shape[0]):
+
+            for j in range(dfts.shape[1]):
+
+                samples[i] += numpy.real(dfts[i, j] * twiddles[j])
