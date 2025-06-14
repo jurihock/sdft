@@ -36,7 +36,7 @@ for m in [100, 101]:
 
         p = np.angle(dft[:, n])
         p = np.unwrap(p)
-        p = np.diff(p, prepend=0)
+        p = np.diff(p)
         p = sr * p / (2 * np.pi)
 
         assert np.allclose(p[p.size//2:], f)
