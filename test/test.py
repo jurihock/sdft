@@ -26,7 +26,7 @@ def main():
     wavfile = sys.argv[6]
     dftfile = sys.argv[7]
 
-    sdft = SDFT(dftsize, window, latency)
+    sdft = SDFT(1, dftsize, window, latency)
 
     x, sr = readwav(srcfile)
     size = x.size

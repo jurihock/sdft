@@ -28,12 +28,14 @@ class SDFT:
     Sliding Discrete Fourier Transform (SDFT).
     """
 
-    def __init__(self, dftsize, window='hann', latency=1):
+    def __init__(self, samplerate, dftsize, window='hann', latency=1):
         """
         Create a new SDFT plan.
 
         Parameters
         ----------
+        samplerate : int
+            Sample rate in hertz.
         dftsize : int
             Desired number of DFT bins.
         window : str, optional
@@ -50,6 +52,9 @@ class SDFT:
         else:                                    # even dftsize
             fullsize = dftsize * 2 - 1           # odd fullsize
             assert dftsize == (fullsize + 1) / 2
+
+        self.samplerate = samplerate
+        self.frequencies = samplerate * numpy.arange(dftsize) / fullsize
 
         self.odd = fullsize % 2
         self.even = not self.odd

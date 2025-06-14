@@ -16,7 +16,7 @@ int main()
   const auto dftsize = 1000;
 
   const auto ta0 = std::chrono::high_resolution_clock::now();
-  SDFT<double, double> sdft(dftsize);
+  SDFT<double, double> sdft(samplerate, dftsize);
   const auto tb0 = std::chrono::high_resolution_clock::now();
   const auto e0 = std::chrono::duration_cast<std::chrono::microseconds>(tb0 - ta0).count();
 

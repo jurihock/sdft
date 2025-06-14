@@ -51,7 +51,7 @@ int main()
 
   // 2) estimate output dft
 
-  SDFT<double> sdft(m);  // create sdft plan
+  SDFT<double> sdft(sr, m);  // create sdft plan
 
   nc::NdArray<std::complex<double>> dft(n, m);  // dft matrix of shape (n, m)
 

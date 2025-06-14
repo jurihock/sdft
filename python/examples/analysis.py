@@ -34,7 +34,7 @@ def main():
 
     # 2) estimate output dft
 
-    sdft = SDFT(m)  # create sdft plan
+    sdft = SDFT(sr, m)  # create sdft plan
 
     dft = sdft.sdft(x)  # dft matrix of shape (n, m)
 

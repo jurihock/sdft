@@ -37,7 +37,7 @@ def main():
 
     # 2) synthesize output signal
 
-    sdft = SDFT(m, latency=l)  # create sdft plan
+    sdft = SDFT(sr, m, latency=l)  # create sdft plan
 
     dft = sdft.sdft(x)  # dft matrix of shape (n, m)
 
