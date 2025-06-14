@@ -31,10 +31,9 @@ for m in [100, 101]:
         print(f'test frequency {f} Hz at bin {n} of {m}')
 
         x = np.exp(2j * np.pi * f * t).real
-        dft = sdft.sdft(x)
-        y = sdft.isdft(dft)
+        y = sdft.sdft(x)
 
-        p = np.angle(dft[:, n])
+        p = np.angle(y[:, n])
         p = np.unwrap(p)
         p = np.diff(p)
         p = sr * p / (2 * np.pi)
